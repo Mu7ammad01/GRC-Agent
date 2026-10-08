@@ -67,6 +67,17 @@ grc-agent/
 
 ## Démarrage rapide
 
+### Dans GitHub Codespaces (recommandé)
+
+Ouvrir le dépôt dans un Codespace **4 cœurs**. Le fichier `.devcontainer/devcontainer.json` fournit un environnement léger (Python 3.12 + Docker) : à la création, les dépendances Python sont installées ; à chaque démarrage, `scripts/start_services.sh` lance PostgreSQL, Chroma et Ollama et télécharge les modèles manquants (environ 5 Go la première fois). Il reste ensuite à lancer :
+
+```bash
+make ingest        # une seule fois, ou après suppression du volume Chroma
+make test
+```
+
+### En local
+
 Prérequis : Docker et Docker Compose, Python 3.11+, environ 8 Go de RAM libre pour le modèle local.
 
 ```bash

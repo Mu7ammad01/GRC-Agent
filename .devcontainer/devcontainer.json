@@ -1,0 +1,28 @@
+{
+  // Environnement de développement léger pour GitHub Codespaces :
+  // Python + Docker uniquement (l'image "universal" par défaut occupe ~16 Go du disque de 32 Go).
+  "name": "GRC-Agent",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb"
+  },
+  "forwardPorts": [5432, 8000, 11434],
+  "portsAttributes": {
+    "5432": { "label": "PostgreSQL", "onAutoForward": "silent" },
+    "8000": { "label": "Chroma", "onAutoForward": "silent" },
+    "11434": { "label": "Ollama", "onAutoForward": "silent" }
+  },
+  // Une seule fois, à la création : dépendances Python (sans cache, pour économiser le disque)
+  "postCreateCommand": "pip install --no-cache-dir -r requirements.txt",
+  // À chaque démarrage : services Docker et modèles (téléchargés seulement s'ils manquent)
+  "postStartCommand": "bash scripts/start_services.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  }
+}

@@ -1,7 +1,10 @@
 -include .env
 export
 
-.PHONY: up down reset models seed corpus ingest test psql ask demo-uc1 demo-uc2 reset-db
+.PHONY: services up down reset models seed corpus ingest test psql ask demo-uc1 demo-uc2 reset-db
+
+services:      ## Lance les services et télécharge les modèles manquants (auto dans Codespaces)
+	bash scripts/start_services.sh
 
 up:            ## Lance PostgreSQL, Chroma et Ollama
 	docker compose up -d
