@@ -1,0 +1,20 @@
+"""Configuration lue depuis l'environnement (voir .env.example)."""
+import os
+from dataclasses import dataclass
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+@dataclass(frozen=True)
+class Settings:
+    database_url: str = os.getenv("DATABASE_URL", "postgresql://grc:change-me@localhost:5432/grc")
+    chroma_host: str = os.getenv("CHROMA_HOST", "localhost")
+    chroma_port: int = int(os.getenv("CHROMA_PORT", "8000"))
+    chroma_collection: str = os.getenv("CHROMA_COLLECTION", "corpus_grc")
+    ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
+    llm_model: str = os.getenv("LLM_MODEL", "mistral:7b")
+    embed_model: str = os.getenv("EMBED_MODEL", "nomic-embed-text")
+
+
+settings = Settings()

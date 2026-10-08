@@ -5,3 +5,4 @@ pypdf>=4.0
 beautifulsoup4>=4.12
 requests>=2.31
 pytest>=8.0
+ollama>=0.4
