@@ -1,0 +1,31 @@
+id,title,description,category_id,process,owner_unit_id,inherent_likelihood,inherent_impact,residual_likelihood,residual_impact,status,last_review
+R-001,Rançongiciel sur le SI central,Chiffrement des serveurs du système bancaire central rendant les services indisponibles.,TIC-CYB,Exploitation SI,DSI,4,5,2,5,actif,2026-06-30
+R-002,Hameçonnage ciblé des collaborateurs,Vol d'identifiants par des courriels frauduleux ciblant les collaborateurs.,TIC-CYB,Messagerie,DSI,5,4,3,3,actif,2026-06-30
+R-003,Compromission d'un compte à privilèges,Prise de contrôle d'un compte administrateur permettant des actions étendues sur le SI.,TIC-CYB,Administration SI,DSI,3,5,2,4,actif,2026-06-30
+R-004,Défaillance du prestataire cloud de la banque en ligne,Indisponibilité durable ou faillite du prestataire hébergeant la banque en ligne.,TIC-TIERS,Banque en ligne,DSI,3,5,2,5,actif,2026-06-30
+R-005,Clauses contractuelles TIC incomplètes,"Contrats TIC sans droits d'audit, localisation des données ou stratégie de sortie.",TIC-TIERS,Achats TIC,DSI,4,3,3,3,actif,2026-06-30
+R-006,Concentration sur un fournisseur TIC unique,Dépendance de plusieurs fonctions critiques à un même fournisseur.,TIC-TIERS,Achats TIC,DSI,3,4,3,3,actif,2026-06-30
+R-007,Indisponibilité prolongée du système de paiement,Arrêt du système de paiement au-delà de la durée maximale tolérable.,TIC-DISP,Paiements,OPS,3,5,2,4,actif,2026-06-30
+R-008,Échec de restauration des sauvegardes,Impossibilité de restaurer les données après un incident majeur.,TIC-DISP,Exploitation SI,DSI,3,5,2,5,actif,2026-06-30
+R-009,Fuite de données clients par un collaborateur,Exfiltration volontaire ou accidentelle de données clients.,TIC-DATA,Gestion des données,DSI,3,5,2,4,actif,2026-06-30
+R-010,Usage non encadré d'outils d'IA générative,Saisie de données confidentielles dans des outils d'IA non autorisés (Shadow AI).,TIC-DATA,Postes de travail,DSI,4,4,3,3,actif,2026-06-30
+R-011,Modification non autorisée de données de référence,Altération des coordonnées bancaires ou des plafonds clients.,TIC-DATA,Données de référence,OPS,2,4,2,3,actif,2026-06-30
+R-012,Détournement de fonds par un collaborateur,Virements frauduleux initiés en interne.,OP-FI,Paiements,OPS,2,5,1,4,actif,2026-06-30
+R-013,Fraude au président,Exécution d'un faux virement sur instruction usurpant un dirigeant.,OP-FE,Paiements,OPS,4,4,2,3,actif,2026-06-30
+R-014,Fraude à la carte bancaire,Utilisation frauduleuse de cartes de clients.,OP-FE,Cartes,RET,4,3,3,2,actif,2026-06-30
+R-015,Usurpation d'identité à l'ouverture de compte,Ouverture de compte avec de faux documents.,OP-FE,Entrée en relation,RET,3,4,2,3,actif,2026-06-30
+R-016,Erreur de saisie d'ordres de paiement,"Montant, bénéficiaire ou date erronés dans un ordre de paiement.",OP-EXE,Paiements,OPS,4,3,3,2,actif,2026-06-30
+R-017,Retard de traitement des réclamations,Réponses aux clients au-delà des délais réglementaires.,OP-CLI,Relation client,RET,3,3,3,2,actif,2026-06-30
+R-018,Vente de produits inadaptés au profil client,Conseil en investissement non adapté au profil du client.,OP-CLI,Conseil en investissement,PRI,3,4,2,3,actif,2026-06-30
+R-019,Départ de collaborateurs clés en cybersécurité,Perte de compétences critiques difficiles à remplacer.,OP-RH,Gestion des talents,RH,3,3,3,3,actif,2026-06-30
+R-020,Sinistre sur le bâtiment principal,Incendie ou inondation rendant le siège inaccessible.,OP-DOM,Logistique,OPS,1,5,1,4,actif,2026-06-30
+R-021,Panne d'une application métier critique,Indisponibilité de l'application de gestion des crédits.,OP-SYS,Crédit,DSI,3,4,2,3,actif,2026-06-30
+R-022,Changement applicatif mal testé en production,Régression introduite lors d'une mise en production.,OP-SYS,Gestion des changements,DSI,4,3,3,3,actif,2026-06-30
+R-023,Défaut de vigilance à l'entrée en relation,Dossiers clients incomplets ou cotation de risque erronée.,CO-BC,Entrée en relation,CMP,4,5,2,4,actif,2026-06-30
+R-024,Alertes de surveillance des transactions non traitées,Accumulation d'alertes AML non analysées dans les délais.,CO-BC,Surveillance des transactions,CMP,4,5,3,3,actif,2026-06-30
+R-025,Défaut de déclaration d'opération suspecte,Opération suspecte non déclarée à la CRF.,CO-BC,Déclarations CRF,CMP,2,5,1,5,actif,2026-06-30
+R-026,Opération avec une personne sanctionnée,Paiement au profit d'une personne visée par des sanctions.,CO-SAN,Filtrage,CMP,3,5,1,5,actif,2026-06-30
+R-027,Retard de mise en conformité DORA,Exigences DORA non couvertes à la date d'application.,CO-JUR,Veille réglementaire,CMP,4,4,2,3,actif,2026-06-30
+R-028,Violation du secret professionnel,Divulgation d'informations clients en violation de l'article 41 de la loi de 1993.,CO-JUR,Gestion des données,CMP,2,5,1,5,actif,2026-06-30
+R-029,Défaillance du dispositif d'alerte interne,Signalements non traités ou identité du lanceur d'alerte exposée.,CO-REP,Éthique,CMP,2,4,2,3,actif,2026-06-30
+R-030,Atteinte à la réputation après un incident médiatisé,Perte de confiance des clients après un incident rendu public.,CO-REP,Communication de crise,RSK,3,4,2,4,actif,2026-06-30

@@ -1,0 +1,41 @@
+id,title,description,control_type,nature,frequency,owner_unit_id,effectiveness,last_test
+C-001,EDR sur serveurs et postes,Détection et blocage des comportements malveillants sur tous les terminaux.,detectif,automatique,continu,DSI,efficace,2026-06-15
+C-002,Sauvegardes immuables hors ligne,Sauvegarde quotidienne des systèmes critiques sur un support non modifiable et déconnecté.,preventif,automatique,quotidien,DSI,partiel,2026-05-20
+C-003,Gestion des correctifs de sécurité,Application des correctifs critiques sous 30 jours selon la criticité des actifs.,preventif,semi_automatique,mensuel,DSI,partiel,2026-07-01
+C-004,Authentification multifacteur,"MFA obligatoire pour l'accès distant, la messagerie et les applications critiques.",preventif,automatique,continu,DSI,efficace,2026-04-10
+C-005,Filtrage de la messagerie,"Analyse des pièces jointes et des liens, blocage des domaines usurpés.",preventif,automatique,continu,DSI,efficace,2026-03-02
+C-006,Sensibilisation à la sécurité,Formation annuelle et campagnes trimestrielles d'hameçonnage simulé.,preventif,manuel,trimestriel,RH,partiel,2026-06-30
+C-007,Gestion des accès à privilèges (PAM),"Coffre-fort des comptes administrateurs, sessions enregistrées.",preventif,automatique,continu,DSI,efficace,2026-05-05
+C-008,Revue périodique des droits d'accès,Recertification trimestrielle des habilitations par les responsables.,detectif,manuel,trimestriel,DSI,inefficace,2026-07-15
+C-009,Supervision de sécurité (SOC),Corrélation des journaux et traitement des alertes de sécurité 24/7.,detectif,automatique,continu,DSI,efficace,2026-06-01
+C-010,Segmentation réseau,Cloisonnement des zones critiques et filtrage des flux entre zones.,preventif,automatique,continu,DSI,efficace,2026-02-14
+C-011,Stratégie de sortie des prestataires TIC critiques,Plan documenté de réversibilité pour chaque prestataire critique.,correctif,manuel,annuel,DSI,non_teste,
+C-012,Suivi des niveaux de service des prestataires,Revue mensuelle des SLA et des incidents des prestataires TIC.,detectif,manuel,mensuel,DSI,efficace,2026-08-31
+C-013,Registre d'information des accords TIC,Tenue du registre des contrats avec les prestataires de services TIC.,detectif,manuel,trimestriel,DSI,partiel,2026-06-30
+C-014,Revue juridique des contrats TIC,Vérification des clauses obligatoires avant signature ou renouvellement.,preventif,manuel,evenementiel,CMP,partiel,2026-05-12
+C-015,Plan de continuité d'activité testé,"PCA couvrant les fonctions critiques, testé chaque année.",correctif,manuel,annuel,RSK,efficace,2025-11-20
+C-016,Site de secours informatique,Reprise des systèmes critiques sur un second centre de données.,correctif,automatique,continu,DSI,efficace,2025-11-20
+C-017,Supervision des systèmes 24/7,Surveillance de la disponibilité et des performances des applications.,detectif,automatique,continu,DSI,efficace,2026-07-01
+C-018,Tests de restauration des sauvegardes,Restauration trimestrielle d'un échantillon de systèmes critiques.,detectif,manuel,trimestriel,DSI,inefficace,2026-06-10
+C-019,Prévention des fuites de données (DLP),Blocage des envois de données sensibles hors de la banque.,preventif,automatique,continu,DSI,partiel,2026-04-22
+C-020,Classification des informations,Étiquetage des documents selon leur niveau de confidentialité.,preventif,manuel,annuel,CMP,partiel,2026-01-15
+C-021,Politique d'usage de l'IA générative,Règles d'usage et liste des outils d'IA autorisés.,preventif,manuel,annuel,CMP,non_teste,
+C-022,Double validation (quatre yeux),Toute opération sensible est validée par une seconde personne.,preventif,manuel,continu,OPS,efficace,2026-05-30
+C-023,Piste d'audit des modifications,Journalisation des modifications de données de référence.,detectif,automatique,continu,DSI,efficace,2026-03-18
+C-024,Séparation des tâches,Incompatibilités de rôles paramétrées dans les applications.,preventif,semi_automatique,continu,OPS,efficace,2026-04-08
+C-025,Rapprochements comptables quotidiens,Rapprochement des comptes de passage et des comptes nostro.,detectif,manuel,quotidien,OPS,efficace,2026-08-29
+C-026,Rappel de confirmation des virements inhabituels,Contre-appel sur un numéro connu avant exécution.,preventif,manuel,evenementiel,OPS,partiel,2026-07-20
+C-027,Scoring des transactions par carte,Détection en temps réel des transactions frauduleuses.,detectif,automatique,continu,RET,efficace,2026-06-12
+C-028,Vérification électronique de l'identité,Contrôle de l'authenticité des pièces d'identité à l'ouverture.,preventif,semi_automatique,evenementiel,RET,efficace,2026-05-25
+C-029,Due diligence KYC à l'entrée en relation,"Identification du client et du bénéficiaire effectif, cotation du risque.",preventif,manuel,evenementiel,CMP,partiel,2026-07-08
+C-030,Suivi des réclamations clients,"Enregistrement, délai de réponse et analyse des causes.",detectif,manuel,mensuel,RET,efficace,2026-08-05
+C-031,Test d'adéquation MiFID II,Évaluation de l'adéquation du produit au profil du client.,preventif,semi_automatique,evenementiel,PRI,efficace,2026-06-18
+C-032,Plan de succession des postes clés,Identification de remplaçants pour les fonctions critiques.,correctif,manuel,annuel,RH,non_teste,
+C-033,Gestion des changements,"Validation, tests de non-régression et retour arrière des mises en production.",preventif,manuel,evenementiel,DSI,partiel,2026-07-28
+C-034,Revue périodique des dossiers KYC,Mise à jour des dossiers selon le niveau de risque du client.,detectif,manuel,mensuel,CMP,inefficace,2026-08-15
+C-035,Surveillance des transactions (scénarios AML),Génération d'alertes sur les opérations atypiques.,detectif,automatique,continu,CMP,efficace,2026-05-14
+C-036,Traitement et escalade des alertes AML,Analyse des alertes et escalade au responsable du contrôle (RC).,detectif,manuel,quotidien,CMP,inefficace,2026-08-20
+C-037,Déclaration à la CRF via goAML,Procédure de déclaration des opérations suspectes à la Cellule de renseignement financier.,correctif,manuel,evenementiel,CMP,efficace,2026-03-10
+C-038,Filtrage des listes de sanctions,"Filtrage des clients et des paiements contre les listes UE, ONU et nationales.",preventif,automatique,continu,CMP,efficace,2026-06-25
+C-039,Veille réglementaire,Identification des nouveaux textes et suivi des plans de mise en conformité.,detectif,manuel,mensuel,CMP,partiel,2026-07-31
+C-040,Canal d'alerte interne confidentiel,Dispositif de signalement protégeant l'identité du lanceur d'alerte.,detectif,manuel,continu,CMP,efficace,2026-02-20

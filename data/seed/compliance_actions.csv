@@ -1,0 +1,9 @@
+id,title,obligation_id,owner_id,due_date,status
+CA-001,Formaliser la procédure de classification des incidents TIC (DORA art. 18),O-010,u.dupont,2026-11-30,en_cours
+CA-002,Mettre en place le processus de notification des incidents majeurs à la CSSF,O-011,u.dupont,2026-10-31,en_retard
+CA-003,Compléter le registre d'information des accords TIC,O-013,u.schmit,2026-12-15,en_cours
+CA-004,Ajouter les clauses d'audit et de sortie aux 6 contrats TIC critiques,O-015,u.weber,2027-01-31,a_faire
+CA-005,Rédiger le rapport annuel compliance au conseil d'administration,O-018,u.kieffer,2027-02-28,a_faire
+CA-006,Créer le comité d'approbation des nouveaux produits,O-020,u.kieffer,2026-12-31,a_faire
+CA-007,Résorber l'arriéré d'alertes AML de plus de 30 jours,O-023,u.weber,2026-10-15,en_retard
+CA-008,Formaliser la désignation du RR et du RC LBC/FT,O-021,u.kieffer,2026-11-15,termine

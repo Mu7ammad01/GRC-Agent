@@ -1,0 +1,10 @@
+id,short_name,title,norm_level,reference,url
+REG-DORA,DORA,Règlement sur la résilience opérationnelle numérique du secteur financier,1,Règlement (UE) 2022/2554,https://eur-lex.europa.eu/eli/reg/2022/2554/oj
+REG-AIACT,AI Act,Règlement établissant des règles harmonisées concernant l'intelligence artificielle,1,Règlement (UE) 2024/1689,https://eur-lex.europa.eu/eli/reg/2024/1689/oj
+REG-L1993,Loi de 1993,Loi du 5 avril 1993 relative au secteur financier,3,"Loi du 5 avril 1993, telle que modifiée",
+REG-L2004,Loi LBC/FT,Loi du 12 novembre 2004 relative à la lutte contre le blanchiment et contre le financement du terrorisme,3,"Loi du 12 novembre 2004, telle que modifiée",
+REG-C12552,CSSF 12/552,"Administration centrale, gouvernance interne et gestion des risques",4,"Circulaire CSSF 12/552, telle que modifiée (dont 24/860)",
+REG-R1202,Règlement CSSF 12-02,Lutte contre le blanchiment et contre le financement du terrorisme,4,"Règlement CSSF n° 12-02, tel que modifié par le règlement 20-05",
+REG-POL-PSSI,PSSI BEL,Politique de sécurité de l'information de la BEL,5,data/policies/politique_securite_information.md,
+REG-POL-TIERS,Politique prestataires TIC,Politique de gestion des prestataires de services TIC de la BEL,5,data/policies/politique_prestataires_tic.md,
+REG-POL-INC,Politique incidents,Politique de gestion des incidents de la BEL,5,data/policies/politique_gestion_incidents.md,

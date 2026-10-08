@@ -1,0 +1,19 @@
+# Secrets et environnement
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Corpus téléchargé et index locaux
+corpus/raw/
+data/chroma/
+data/private/
+
+# Volumes Docker
+volumes/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store

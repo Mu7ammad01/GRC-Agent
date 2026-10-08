@@ -1,0 +1,56 @@
+name: grc-agent
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Exécutés une seule fois, au premier démarrage, par ordre alphabétique
+      - ./db/01_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./db/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+
+  chroma:
+    image: chromadb/chroma:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - chromadata:/data
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollamadata:/root/.ollama
+    # Décommenter si une carte NVIDIA est disponible
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Semaine 2 : couche d'autorité
+  # opa:
+  #   image: openpolicyagent/opa:latest
+  #   command: ["run", "--server", "--addr", "0.0.0.0:8181", "/policies"]
+  #   ports:
+  #     - "8181:8181"
+  #   volumes:
+  #     - ./policies:/policies:ro
+
+volumes:
+  pgdata:
+  chromadata:
+  ollamadata:

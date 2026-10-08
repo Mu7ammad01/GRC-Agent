@@ -1,0 +1,10 @@
+id,name,line
+RET,Banque de détail,1
+PRI,Banque privée,1
+TRE,Trésorerie,1
+OPS,Opérations,1
+DSI,Direction des systèmes d'information,1
+RH,Ressources humaines,1
+RSK,Direction des risques,2
+CMP,Conformité,2
+AUD,Audit interne,3

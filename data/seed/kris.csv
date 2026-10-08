@@ -1,0 +1,9 @@
+id,name,unit,risk_id,higher_is_worse,warning_threshold,appetite_threshold
+K-01,Disponibilité des systèmes critiques,%,R-007,False,99.7,99.5
+K-02,Incidents TIC majeurs dans le mois,nombre,R-001,True,0,1
+K-03,Correctifs critiques en retard de plus de 30 jours,nombre,R-001,True,5,10
+K-04,Collaborateurs formés à la sécurité,%,R-002,False,90,80
+K-05,Alertes AML non traitées depuis plus de 30 jours,nombre,R-024,True,20,50
+K-06,Dossiers KYC à risque élevé en retard de revue,%,R-023,True,5,10
+K-07,Prestataires TIC critiques sans clause d'audit,%,R-005,True,5,10
+K-08,Pertes opérationnelles brutes du mois,kEUR,R-016,True,100,250
