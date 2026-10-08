@@ -32,7 +32,7 @@ def collect_chunks(root: Path = ROOT) -> tuple[list[Chunk], list[str]]:
 
     for doc in sources["documents"]:
         path = root / "corpus" / "raw" / doc["file"]
-        if not path.exists():
+        if not path.exists() or path.stat().st_size < 1000:
             missing.append(doc["file"])
             continue
         meta = {
@@ -94,7 +94,11 @@ def main() -> None:
     chunks, missing = collect_chunks()
     for name in missing:
         print(f"[manquant] corpus/raw/{name} — voir corpus/sources.yaml")
-    n = index(chunks, get_collection(reset=args.reset))
+    try:
+        collection = get_collection(reset=args.reset)
+    except ValueError as exc:
+        raise SystemExit(f"Chroma injoignable sur {settings.chroma_host}:{settings.chroma_port} — lancer `make up`. ({exc})")
+    n = index(chunks, collection)
     print(f"{n} passages indexés dans la collection « {settings.chroma_collection} ».")
 
 

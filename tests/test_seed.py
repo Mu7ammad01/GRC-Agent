@@ -61,7 +61,11 @@ needs_db = pytest.mark.skipif(not DATABASE_URL, reason="DATABASE_URL non défini
 @pytest.fixture
 def conn():
     psycopg = pytest.importorskip("psycopg")
-    with psycopg.connect(DATABASE_URL) as c:
+    try:
+        c = psycopg.connect(DATABASE_URL, connect_timeout=3)
+    except psycopg.OperationalError:
+        pytest.skip("base PostgreSQL injoignable (lancer `make up`)")
+    with c:
         yield c
         c.rollback()
 

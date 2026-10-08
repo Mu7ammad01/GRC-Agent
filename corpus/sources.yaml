@@ -1,5 +1,6 @@
 # Corpus réglementaire indexé dans Chroma.
-# - url présente : téléchargé automatiquement par `make corpus` dans corpus/raw/
+# - url présente : téléchargé par `make corpus` ; si EUR-Lex bloque le script,
+#   ouvrir l'url dans un navigateur et enregistrer le PDF sous corpus/raw/<file>
 # - url absente  : déposer le fichier à la main dans corpus/raw/ sous le nom indiqué
 # norm_level : 1 règlement UE · 2 directive UE · 3 loi luxembourgeoise · 4 CSSF · 5 interne
 
@@ -7,14 +8,14 @@ documents:
   - id: REG-DORA
     title: "Règlement (UE) 2022/2554 — DORA"
     norm_level: 1
-    url: "https://eur-lex.europa.eu/legal-content/FR/TXT/HTML/?uri=CELEX:32022R2554"
-    file: dora_fr.html
+    url: "https://eur-lex.europa.eu/legal-content/FR/TXT/PDF/?uri=CELEX:32022R2554"
+    file: dora_fr.pdf
 
   - id: REG-AIACT
     title: "Règlement (UE) 2024/1689 — AI Act"
     norm_level: 1
-    url: "https://eur-lex.europa.eu/legal-content/FR/TXT/HTML/?uri=CELEX:32024R1689"
-    file: ai_act_fr.html
+    url: "https://eur-lex.europa.eu/legal-content/FR/TXT/PDF/?uri=CELEX:32024R1689"
+    file: ai_act_fr.pdf
 
   - id: REG-C12552
     title: "Circulaire CSSF 12/552 (version coordonnée)"
