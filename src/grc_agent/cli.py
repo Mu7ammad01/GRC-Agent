@@ -31,6 +31,8 @@ def main() -> None:
     parser.add_argument("--user", default="u.dupont", help="identifiant utilisateur (table users)")
     parser.add_argument("--scenario", help="scénario prédéfini de scenarios/scenarios.yaml")
     parser.add_argument("--json", action="store_true", help="affiche la trace complète en JSON")
+    parser.add_argument("--provider", help="remplace LLM_PROVIDER (ollama, anthropic, openai, google_genai)")
+    parser.add_argument("--model", help="remplace LLM_MODEL")
     args = parser.parse_args()
 
     if args.scenario:
@@ -41,7 +43,7 @@ def main() -> None:
     else:
         parser.error("indiquer une question ou --scenario")
 
-    result = run(question, user_id=user, scenario=args.scenario)
+    result = run(question, user_id=user, scenario=args.scenario, provider=args.provider, model_name=args.model)
 
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -52,7 +54,7 @@ def main() -> None:
         print(f"- [{c['niveau_cible']}] {c['outil']}({json.dumps(c['arguments'], ensure_ascii=False)}){flag}")
     print("\n=== Réponse ===")
     print(result["reponse"])
-    print(f"\n({result['duree_s']} s, {len(result['ecritures'])} écriture(s), trace : {result['trace']})")
+    print(f"\n({result['fournisseur']} / {result['modele']}, {result['duree_s']} s, {len(result['ecritures'])} écriture(s), trace : {result['trace']})")
 
 
 if __name__ == "__main__":

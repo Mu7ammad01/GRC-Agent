@@ -13,6 +13,7 @@ class Settings:
     chroma_port: int = int(os.getenv("CHROMA_PORT", "8000"))
     chroma_collection: str = os.getenv("CHROMA_COLLECTION", "corpus_grc")
     ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
+    llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")   # ollama | anthropic | openai | google_genai
     llm_model: str = os.getenv("LLM_MODEL", "mistral:7b")
     embed_model: str = os.getenv("EMBED_MODEL", "nomic-embed-text")
 

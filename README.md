@@ -57,7 +57,7 @@ grc-agent/
 │   ├── ingest.py          # indexation dans Chroma (embeddings Ollama)
 │   ├── db.py              # accès à la base GRC
 │   ├── tools.py           # 14 outils GRC et leur niveau d'autorité cible
-│   ├── agent.py           # agent (LangChain create_agent sur LangGraph) et traces
+│   ├── agent.py           # agent (LangChain create_agent sur LangGraph), choix du LLM, traces
 │   └── cli.py             # interface en ligne de commande
 ├── scenarios/             # scénarios de démonstration et, en J4, d'attaque
 ├── policies/              # règles OPA de la couche d'autorité (semaine 2)
@@ -88,6 +88,25 @@ make demo-uc2                                   # cartographie DORA art. 30
 make ask Q="Quels KRI sont hors appétit ?" U=u.weber
 make reset-db                                   # annule les écritures de l'agent
 ```
+
+### Choisir le modèle
+
+Le LLM de l'agent se choisit dans `.env` (`LLM_PROVIDER`, `LLM_MODEL`) ou à la volée :
+
+```bash
+make ask Q="..."                                                      # modèle du .env (Ollama par défaut)
+PYTHONPATH=src python -m grc_agent.cli --scenario uc2 --provider ollama --model qwen2.5:7b
+PYTHONPATH=src python -m grc_agent.cli --scenario uc2 --provider anthropic --model claude-sonnet-5
+```
+
+| Fournisseur | `LLM_PROVIDER` | Prérequis |
+|---|---|---|
+| Ollama (local, défaut) | `ollama` | aucun ; les données ne quittent pas la machine |
+| Anthropic (Claude) | `anthropic` | `pip install -r requirements-cloud.txt`, `ANTHROPIC_API_KEY` |
+| OpenAI (GPT) | `openai` | idem, `OPENAI_API_KEY` |
+| Google (Gemini) | `google_genai` | idem, `GOOGLE_API_KEY` |
+
+Les embeddings restent toujours locaux (Ollama). Les fournisseurs cloud sont réservés aux **données fictives** du lab : en production, une API cloud serait un prestataire tiers de services TIC au sens de DORA (art. 28 à 30). Chaque trace enregistre le fournisseur et le modèle, ce qui permet de comparer leur résistance aux mêmes attaques.
 
 Chaque exécution est tracée dans `traces/AAAAMMJJ.jsonl` (question, outils appelés, écritures, réponse, durée).
 

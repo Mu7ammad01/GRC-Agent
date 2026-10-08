@@ -1,0 +1,4 @@
+# Fournisseurs LLM cloud (optionnels) : pip install -r requirements-cloud.txt
+langchain-anthropic>=1.0
+langchain-openai>=1.0
+langchain-google-genai>=2.0

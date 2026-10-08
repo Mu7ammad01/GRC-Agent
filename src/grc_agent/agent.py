@@ -40,10 +40,38 @@ Règles :
 TRACES_DIR = ROOT / "traces"
 
 
-def build_model():
-    from langchain_ollama import ChatOllama
+PROVIDER_PACKAGES = {
+    "ollama": "langchain-ollama",
+    "anthropic": "langchain-anthropic",
+    "openai": "langchain-openai",
+    "google_genai": "langchain-google-genai",
+}
+API_KEY_VARS = {"anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY", "google_genai": "GOOGLE_API_KEY"}
 
-    return ChatOllama(model=settings.llm_model, base_url=settings.ollama_url, temperature=0)
+
+def build_model(provider: str | None = None, model: str | None = None):
+    """Instancie le LLM selon LLM_PROVIDER et LLM_MODEL (.env).
+
+    - ollama       : modèle local, aucune donnée ne sort de la machine (défaut)
+    - anthropic, openai, google_genai : API cloud, clé dans ANTHROPIC_API_KEY,
+      OPENAI_API_KEY ou GOOGLE_API_KEY. À réserver aux données fictives du lab.
+    """
+    import os
+
+    from langchain.chat_models import init_chat_model
+
+    provider = provider or settings.llm_provider
+    model = model or settings.llm_model
+    if provider not in PROVIDER_PACKAGES:
+        raise SystemExit(f"LLM_PROVIDER inconnu : {provider}. Valeurs possibles : {', '.join(PROVIDER_PACKAGES)}")
+    key_var = API_KEY_VARS.get(provider)
+    if key_var and not os.getenv(key_var):
+        raise SystemExit(f"{key_var} manquante dans .env pour utiliser le fournisseur {provider}.")
+    kwargs = {"base_url": settings.ollama_url} if provider == "ollama" else {}
+    try:
+        return init_chat_model(model, model_provider=provider, temperature=0, **kwargs)
+    except ImportError as exc:
+        raise SystemExit(f"Paquet manquant pour {provider} : pip install {PROVIDER_PACKAGES[provider]}") from exc
 
 
 def build_agent(model=None, collection=None, tool_list=None):
@@ -89,9 +117,14 @@ def summarize(messages) -> dict:
     return {"reponse": final, "appels_outils": calls}
 
 
-def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | None = None) -> dict:
-    """Pose une question à l'agent et enregistre la trace dans traces/AAAAMMJJ.jsonl."""
-    agent = agent or build_agent()
+def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | None = None,
+        provider: str | None = None, model_name: str | None = None) -> dict:
+    """Pose une question à l'agent et enregistre la trace dans traces/AAAAMMJJ.jsonl.
+
+    provider / model_name remplacent LLM_PROVIDER / LLM_MODEL pour cet appel."""
+    provider = provider or settings.llm_provider
+    model_name = model_name or settings.llm_model
+    agent = agent or build_agent(model=build_model(provider, model_name))
     start = time.perf_counter()
     state = agent.invoke({"messages": [HumanMessage(f"{user_context(user_id)}\n{question}")]})
     result = summarize(state["messages"])
@@ -100,7 +133,8 @@ def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | No
         "utilisateur": user_id,
         "scenario": scenario,
         "question": question,
-        "modele": settings.llm_model,
+        "fournisseur": provider,
+        "modele": model_name,
         "duree_s": round(time.perf_counter() - start, 1),
         "ecritures": [c for c in result["appels_outils"] if c["niveau_cible"] in ("N2", "N3")],
     })
