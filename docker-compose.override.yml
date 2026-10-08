@@ -1,0 +1,3 @@
+services:
+  ollama:
+    network_mode: host
