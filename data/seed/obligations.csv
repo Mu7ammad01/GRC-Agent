@@ -1,0 +1,26 @@
+id,regulation_id,article,summary,owner_unit_id
+O-001,REG-DORA,Art. 5,"L'organe de direction définit, approuve et supervise le cadre de gestion du risque lié aux TIC et en porte la responsabilité finale.",RSK
+O-002,REG-DORA,Art. 6,"Disposer d'un cadre de gestion du risque TIC solide, complet et documenté, réexaminé au moins une fois par an.",RSK
+O-003,REG-DORA,Art. 8,"Identifier, classer et documenter les fonctions métiers, les actifs informationnels et TIC et leurs dépendances.",DSI
+O-004,REG-DORA,Art. 9,"Mettre en place des politiques de protection et de prévention : contrôle d'accès, authentification forte, gestion des correctifs.",DSI
+O-005,REG-DORA,Art. 10,"Détecter rapidement les activités anormales, y compris les problèmes de performance et les incidents TIC.",DSI
+O-006,REG-DORA,Art. 11,Disposer d'une politique de continuité des activités TIC et de plans de réponse et de rétablissement testés.,RSK
+O-007,REG-DORA,Art. 12,Définir des politiques de sauvegarde et des procédures de restauration et de rétablissement testées.,DSI
+O-008,REG-DORA,Art. 13,Tirer les enseignements des incidents et former le personnel et l'organe de direction à la sécurité des TIC.,RH
+O-009,REG-DORA,Art. 17,"Définir et mettre en œuvre un processus de gestion des incidents liés aux TIC pour les détecter, les gérer et les notifier.",DSI
+O-010,REG-DORA,Art. 18,Classer les incidents liés aux TIC selon les critères réglementaires pour déterminer les incidents majeurs.,RSK
+O-011,REG-DORA,Art. 19,Notifier les incidents majeurs liés aux TIC à l'autorité compétente (CSSF) dans les délais prévus.,RSK
+O-012,REG-DORA,Art. 24,Établir et maintenir un programme de tests de résilience opérationnelle numérique.,DSI
+O-013,REG-DORA,"Art. 28, par. 3",Tenir un registre d'informations sur tous les accords contractuels avec des prestataires tiers de services TIC.,DSI
+O-014,REG-DORA,Art. 28,Gérer le risque lié aux prestataires tiers de services TIC selon une stratégie adoptée par l'organe de direction.,DSI
+O-015,REG-DORA,Art. 30,"Inclure les dispositions contractuelles clés : niveaux de service, localisation des données, droits d'audit, stratégie de sortie.",CMP
+O-016,REG-C12552,,"Disposer d'une fonction compliance permanente et indépendante, dirigée par un Chief Compliance Officer.",CMP
+O-017,REG-C12552,Art. 94,Maintenir un dispositif d'alerte interne garantissant la confidentialité de l'identité des personnes qui signalent.,CMP
+O-018,REG-C12552,,La direction autorisée rend compte au moins une fois par an au conseil d'administration de l'activité de la fonction compliance.,CMP
+O-019,REG-C12552,,Établir un plan de contrôle compliance annuel (Compliance Monitoring Plan) fondé sur les risques.,CMP
+O-020,REG-C12552,,"Évaluer le risque de conformité avant le lancement de nouveaux produits, activités ou systèmes.",CMP
+O-021,REG-R1202,Art. 40,Désigner un responsable du respect des obligations LBC/FT (RR) et un responsable du contrôle (RC).,CMP
+O-022,REG-R1202,Art. 42,"Le RC contrôle la qualité des contrôles LBC/FT de 1re ligne, organise la formation et rend compte par écrit à la direction.",CMP
+O-023,REG-L2004,Art. 5,Déclarer sans délai à la Cellule de renseignement financier toute opération suspecte (via goAML).,CMP
+O-024,REG-L2004,Art. 3,Appliquer des mesures de vigilance à l'égard de la clientèle à l'entrée en relation et de façon continue.,CMP
+O-025,REG-L1993,Art. 41,Respecter le secret professionnel sur les informations confiées par les clients.,CMP

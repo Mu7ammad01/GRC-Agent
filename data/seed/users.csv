@@ -1,0 +1,8 @@
+id,full_name,role,unit_id
+u.dupont,Claire Dupont,risk_manager,RSK
+u.weber,Marc Weber,compliance_officer,CMP
+u.schmit,Paul Schmit,metier,DSI
+u.muller,Anne Muller,metier,RET
+u.hoffmann,Luc Hoffmann,cro,RSK
+u.kieffer,Sophie Kieffer,cco,CMP
+u.reuter,Jean Reuter,auditeur,AUD
