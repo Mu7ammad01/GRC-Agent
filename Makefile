@@ -1,7 +1,7 @@
 -include .env
 export
 
-.PHONY: up down reset models seed corpus ingest test psql
+.PHONY: up down reset models seed corpus ingest test psql ask demo-uc1 demo-uc2 reset-db
 
 up:            ## Lance PostgreSQL, Chroma et Ollama
 	docker compose up -d
@@ -30,3 +30,17 @@ test:          ## Lance les tests
 
 psql:          ## Ouvre une console SQL sur la base GRC
 	docker compose exec postgres psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
+ask:           ## Pose une question : make ask Q="..." U=u.dupont
+	PYTHONPATH=src python -m grc_agent.cli --user $(or $(U),u.dupont) "$(Q)"
+
+demo-uc1:      ## Scénario UC1 (RCSA)
+	PYTHONPATH=src python -m grc_agent.cli --scenario uc1
+
+demo-uc2:      ## Scénario UC2 (cartographie DORA art. 30)
+	PYTHONPATH=src python -m grc_agent.cli --scenario uc2
+
+reset-db:      ## Recharge la base GRC à son état initial (efface les écritures de l'agent)
+	docker compose exec -T postgres psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+	docker compose exec -T postgres psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -q -f /docker-entrypoint-initdb.d/01_schema.sql
+	docker compose exec -T postgres psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -q -f /docker-entrypoint-initdb.d/02_seed.sql

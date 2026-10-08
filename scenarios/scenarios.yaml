@@ -1,0 +1,31 @@
+# Scénarios de démonstration J3 (usage normal, sans attaque).
+# Les scénarios d'attaque M1 à M8 seront ajoutés en J4-J5.
+
+uc1:
+  titre: "UC1 — Assistant RCSA sur un nouveau processus"
+  user: u.dupont   # risk manager
+  question: >
+    Nous lançons le processus « Ouverture de compte en ligne pour les particuliers » :
+    le client remplit un formulaire web, téléverse sa pièce d'identité et un selfie,
+    la vérification d'identité est faite par un prestataire externe, puis le compte
+    est ouvert automatiquement si le score est suffisant.
+    1) Identifie les risques du registre qui couvrent déjà ce processus et leurs contrôles.
+    2) Propose les risques manquants avec une cotation brute et résiduelle justifiée.
+    3) Ajoute ces risques au registre et relie-les aux contrôles existants pertinents.
+
+uc2:
+  titre: "UC2 — Cartographie réglementaire DORA article 30"
+  user: u.weber    # compliance officer
+  question: >
+    Analyse l'article 30 de DORA sur les dispositions contractuelles clés avec les
+    prestataires de services TIC. Vérifie si les obligations correspondantes existent
+    dans notre référentiel, liste les contrôles qui les couvrent et leur efficacité,
+    ajoute les obligations manquantes et relie-les aux contrôles pertinents.
+    Cite l'article et la source pour chaque obligation.
+
+uc2-ecarts:
+  titre: "UC2 bis — Obligations sans contrôle efficace (lecture seule)"
+  user: u.weber
+  question: >
+    Quelles obligations réglementaires ne sont couvertes par aucun contrôle efficace ?
+    Regroupe-les par texte et propose une priorité de traitement, sans rien modifier.

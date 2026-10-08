@@ -6,3 +6,6 @@ beautifulsoup4>=4.12
 requests>=2.31
 pytest>=8.0
 ollama>=0.4
+langchain>=1.0
+langgraph>=1.0
+langchain-ollama>=1.0

@@ -17,3 +17,6 @@ volumes/
 .vscode/
 .idea/
 .DS_Store
+
+# Traces d'exécution de l'agent
+traces/

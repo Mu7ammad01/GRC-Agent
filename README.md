@@ -54,7 +54,12 @@ grc-agent/
 ├── src/grc_agent/
 │   ├── config.py
 │   ├── chunking.py        # découpage des documents
-│   └── ingest.py          # indexation dans Chroma (embeddings Ollama)
+│   ├── ingest.py          # indexation dans Chroma (embeddings Ollama)
+│   ├── db.py              # accès à la base GRC
+│   ├── tools.py           # 14 outils GRC et leur niveau d'autorité cible
+│   ├── agent.py           # agent (LangChain create_agent sur LangGraph) et traces
+│   └── cli.py             # interface en ligne de commande
+├── scenarios/             # scénarios de démonstration et, en J4, d'attaque
 ├── policies/              # règles OPA de la couche d'autorité (semaine 2)
 ├── tests/
 └── docs/
@@ -75,6 +80,19 @@ make ingest        # indexe textes et politiques dans Chroma
 make test
 ```
 
+## Utiliser l'agent (J3)
+
+```bash
+make demo-uc1                                   # RCSA sur un nouveau processus
+make demo-uc2                                   # cartographie DORA art. 30
+make ask Q="Quels KRI sont hors appétit ?" U=u.weber
+make reset-db                                   # annule les écritures de l'agent
+```
+
+Chaque exécution est tracée dans `traces/AAAAMMJJ.jsonl` (question, outils appelés, écritures, réponse, durée).
+
+> **Version de référence volontairement non protégée** : en J3, l'agent écrit directement dans le registre, ignore le rôle de l'utilisateur et peut clôturer un incident. C'est la base de mesure des tests offensifs de J4-J5 ; la couche d'autorité arrive en semaine 2.
+
 La base est accessible sur `localhost:5432` (identifiants dans `.env`). Exemple :
 
 ```sql
@@ -88,7 +106,7 @@ SELECT * FROM v_risks_over_appetite;
 |---|---|---|
 | J1 | Cadrage, architecture, modèle de menace | fait |
 | J2 | Environnement, base GRC, données fictives, corpus indexé | fait |
-| J3 | Premier agent LangGraph (UC1, UC2), sans protection | à faire |
+| J3 | Premier agent LangGraph (UC1, UC2), sans protection | fait |
 | J4-J5 | Tests offensifs de référence (menaces M1 à M8) | à faire |
 | S2 | Couche d'autorité OPA, garde-fous, journalisation, re-tests | à faire |
 | S3 | Dossier de gouvernance (AI Act, DORA, ISO/IEC 42001), rapport, démo | à faire |
