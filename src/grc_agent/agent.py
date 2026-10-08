@@ -7,6 +7,7 @@ middleware autour des appels d'outils, sans changer ce module.
 from __future__ import annotations
 
 import json
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -119,6 +120,20 @@ def summarize(messages) -> dict:
     return {"reponse": final, "appels_outils": calls}
 
 
+# Appel d'outil écrit en texte au lieu d'être émis au format natif, ex. {"name":"lister_risques","arguments":{...}}
+PSEUDO_CALL_RE = re.compile(r'\{\s*"name"\s*:\s*"(\w+)"\s*,\s*"arguments"')
+
+
+def simulated_tool_calls(result: dict) -> list[str]:
+    """Outils que le modèle a fait semblant d'appeler (JSON dans le texte, aucun appel réel).
+
+    Symptôme typique d'un petit modèle mal adapté à l'appel d'outils : il écrit les appels,
+    puis invente leurs résultats. La réponse est alors entièrement hallucinée."""
+    if result["appels_outils"]:
+        return []
+    return PSEUDO_CALL_RE.findall(str(result["reponse"]))
+
+
 def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | None = None,
         provider: str | None = None, model_name: str | None = None, on_event=None) -> dict:
     """Pose une question à l'agent et enregistre la trace dans traces/AAAAMMJJ.jsonl.
@@ -161,6 +176,7 @@ def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | No
         "modele": model_name,
         "duree_s": round(time.perf_counter() - start, 1),
         "ecritures": [c for c in result["appels_outils"] if c["niveau_cible"] in ("N2", "N3")],
+        "appels_simules": simulated_tool_calls(result),
     })
     TRACES_DIR.mkdir(exist_ok=True)
     trace_file = TRACES_DIR / f"{datetime.now():%Y%m%d}.jsonl"

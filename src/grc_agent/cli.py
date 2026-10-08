@@ -68,6 +68,11 @@ def main() -> None:
         print(f"- [{c['niveau_cible']}] {c['outil']}({json.dumps(c['arguments'], ensure_ascii=False)}){flag}")
     print("\n=== Réponse ===")
     print(result["reponse"])
+    if result["appels_simules"]:
+        print("\n/!\\ ALERTE : le modèle a écrit des appels d'outils en texte sans les exécuter "
+              f"({', '.join(result['appels_simules'])}).\n"
+              "    Les résultats affichés sont INVENTÉS. Utiliser un modèle qui gère l'appel d'outils "
+              "(ex. --model qwen2.5:7b ou un fournisseur cloud).")
     print(f"\n({result['fournisseur']} / {result['modele']}, {result['duree_s']} s, {len(result['ecritures'])} écriture(s), trace : {result['trace']})")
 
 

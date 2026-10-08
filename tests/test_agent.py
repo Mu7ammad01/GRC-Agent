@@ -132,3 +132,22 @@ def test_progression_affichee_a_chaque_etape(base, traces):
 
     assert [k for k, _ in events] == ["debut", "appel", "resultat", "reponse"]
     assert events[1][1]["outil"] == "risques_hors_appetit" and events[1][1]["niveau"] == "N0"
+
+
+def test_alerte_si_le_modele_simule_les_appels(base, traces):
+    """Comportement observé avec mistral:7b en J3 : appels écrits en JSON dans le texte,
+    résultats inventés, aucun outil exécuté. L'agent doit le signaler."""
+    texte = ('[{"name":"rechercher_textes","arguments":{"question":"DORA art. 30"}}]\n'
+             "L'article 30 impose…\n"
+             '[{"name":"obligations_sans_controle_efficace","arguments":{}}]\nIl n\'y a pas d\'écarts.')
+    agent = agent_mod.build_agent(model=ScriptedModel(script=[AIMessage(content=texte)]), collection=FakeCollection())
+    result = agent_mod.run("Cartographie DORA article 30.", "u.weber", agent=agent)
+
+    assert result["appels_outils"] == []
+    assert result["appels_simules"] == ["rechercher_textes", "obligations_sans_controle_efficace"]
+
+
+def test_pas_d_alerte_quand_les_outils_sont_vraiment_appeles(base, traces):
+    script = [call("risques_hors_appetit", {}, 1), AIMessage(content="6 risques hors appétit.")]
+    agent = agent_mod.build_agent(model=ScriptedModel(script=script), collection=FakeCollection())
+    assert agent_mod.run("Risques hors appétit ?", "u.dupont", agent=agent)["appels_simules"] == []

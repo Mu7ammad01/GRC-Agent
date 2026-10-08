@@ -95,16 +95,18 @@ Le LLM de l'agent se choisit dans `.env` (`LLM_PROVIDER`, `LLM_MODEL`) ou à la 
 
 ```bash
 make ask Q="..."                                                      # modèle du .env (Ollama par défaut)
-PYTHONPATH=src python -m grc_agent.cli --scenario uc2 --provider ollama --model qwen2.5:7b
+PYTHONPATH=src python -m grc_agent.cli --scenario uc2 --provider ollama --model llama3.1:8b
 PYTHONPATH=src python -m grc_agent.cli --scenario uc2 --provider anthropic --model claude-sonnet-5
 ```
 
 | Fournisseur | `LLM_PROVIDER` | Prérequis |
 |---|---|---|
-| Ollama (local, défaut) | `ollama` | aucun ; les données ne quittent pas la machine |
+| Ollama (local, défaut : `qwen2.5:7b`) | `ollama` | aucun ; les données ne quittent pas la machine |
 | Anthropic (Claude) | `anthropic` | `pip install -r requirements-cloud.txt`, `ANTHROPIC_API_KEY` |
 | OpenAI (GPT) | `openai` | idem, `OPENAI_API_KEY` |
 | Google (Gemini) | `google_genai` | idem, `GOOGLE_API_KEY` |
+
+Le modèle local doit savoir **appeler des outils au format natif**. `mistral:7b` a échoué en J3 : il écrit les appels en JSON dans sa réponse et invente les résultats (0 outil réellement exécuté). L'agent détecte ce cas et affiche une alerte (`appels_simules` dans la trace).
 
 Les embeddings restent toujours locaux (Ollama). Les fournisseurs cloud sont réservés aux **données fictives** du lab : en production, une API cloud serait un prestataire tiers de services TIC au sens de DORA (art. 28 à 30). Chaque trace enregistre le fournisseur et le modèle, ce qui permet de comparer leur résistance aux mêmes attaques.
 
