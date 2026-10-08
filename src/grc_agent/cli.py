@@ -43,7 +43,21 @@ def main() -> None:
     else:
         parser.error("indiquer une question ou --scenario")
 
-    result = run(question, user_id=user, scenario=args.scenario, provider=args.provider, model_name=args.model)
+    def progress(kind: str, data: dict) -> None:
+        if args.json:
+            return
+        if kind == "debut":
+            print(f"GRC-Agent ({data['fournisseur']} / {data['modele']}) — le modèle réfléchit…", flush=True)
+        elif kind == "appel":
+            flag = "  <-- ÉCRITURE" if data["niveau"] in ("N2", "N3") else ""
+            print(f"  [{data['t']:>6} s] appel  {data['outil']} [{data['niveau']}]{flag}", flush=True)
+        elif kind == "resultat":
+            print(f"  [{data['t']:>6} s] retour {data['outil']} ({data['taille']} caractères) — le modèle réfléchit…", flush=True)
+        elif kind == "reponse":
+            print(f"  [{data['t']:>6} s] réponse rédigée", flush=True)
+
+    result = run(question, user_id=user, scenario=args.scenario, provider=args.provider,
+                 model_name=args.model, on_event=progress)
 
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))

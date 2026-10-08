@@ -67,7 +67,9 @@ def build_model(provider: str | None = None, model: str | None = None):
     key_var = API_KEY_VARS.get(provider)
     if key_var and not os.getenv(key_var):
         raise SystemExit(f"{key_var} manquante dans .env pour utiliser le fournisseur {provider}.")
-    kwargs = {"base_url": settings.ollama_url} if provider == "ollama" else {}
+    # Ollama tronque silencieusement au-delà de num_ctx : consignes + 14 outils + extraits
+    # dépassent la valeur par défaut, d'où 8192 tokens.
+    kwargs = {"base_url": settings.ollama_url, "num_ctx": settings.ollama_num_ctx} if provider == "ollama" else {}
     try:
         return init_chat_model(model, model_provider=provider, temperature=0, **kwargs)
     except ImportError as exc:
@@ -118,16 +120,38 @@ def summarize(messages) -> dict:
 
 
 def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | None = None,
-        provider: str | None = None, model_name: str | None = None) -> dict:
+        provider: str | None = None, model_name: str | None = None, on_event=None) -> dict:
     """Pose une question à l'agent et enregistre la trace dans traces/AAAAMMJJ.jsonl.
 
-    provider / model_name remplacent LLM_PROVIDER / LLM_MODEL pour cet appel."""
+    provider / model_name remplacent LLM_PROVIDER / LLM_MODEL pour cet appel.
+    on_event(type, donnees) est appelé à chaque étape (affichage de la progression)."""
     provider = provider or settings.llm_provider
     model_name = model_name or settings.llm_model
     agent = agent or build_agent(model=build_model(provider, model_name))
     start = time.perf_counter()
-    state = agent.invoke({"messages": [HumanMessage(f"{user_context(user_id)}\n{question}")]})
-    result = summarize(state["messages"])
+    messages = [HumanMessage(f"{user_context(user_id)}\n{question}")]
+    step = 0
+    if on_event:
+        on_event("debut", {"fournisseur": provider, "modele": model_name})
+    # stream_mode="updates" : un événement par étape (réflexion du modèle ou exécution d'outils)
+    for update in agent.stream({"messages": list(messages)}, stream_mode="updates"):
+        for node, payload in update.items():
+            new = (payload or {}).get("messages", [])
+            messages.extend(new)
+            if not on_event:
+                continue
+            step += 1
+            elapsed = round(time.perf_counter() - start, 1)
+            for m in new:
+                if isinstance(m, AIMessage) and m.tool_calls:
+                    for tc in m.tool_calls:
+                        on_event("appel", {"etape": step, "t": elapsed, "outil": tc["name"], "arguments": tc["args"],
+                                           "niveau": tools.AUTHORITY_LEVEL.get(tc["name"], "?")})
+                elif isinstance(m, ToolMessage):
+                    on_event("resultat", {"etape": step, "t": elapsed, "outil": m.name, "taille": len(str(m.content))})
+                elif isinstance(m, AIMessage):
+                    on_event("reponse", {"etape": step, "t": elapsed})
+    result = summarize(messages)
     result.update({
         "horodatage": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "utilisateur": user_id,

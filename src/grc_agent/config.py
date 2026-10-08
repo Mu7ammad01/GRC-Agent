@@ -16,6 +16,7 @@ class Settings:
     llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")   # ollama | anthropic | openai | google_genai
     llm_model: str = os.getenv("LLM_MODEL", "mistral:7b")
     embed_model: str = os.getenv("EMBED_MODEL", "nomic-embed-text")
+    ollama_num_ctx: int = int(os.getenv("OLLAMA_NUM_CTX", "8192"))
 
 
 settings = Settings()

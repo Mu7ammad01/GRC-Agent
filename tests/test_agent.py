@@ -122,3 +122,13 @@ def test_reference_sans_protection_autorise_une_action_n3(base, traces):
 
     assert result["ecritures"][0]["niveau_cible"] == "N3"
     assert db.fetch_all("SELECT status FROM incidents WHERE id = 'I-010'") == [{"status": "clos"}]
+
+
+def test_progression_affichee_a_chaque_etape(base, traces):
+    script = [call("risques_hors_appetit", {}, 1), AIMessage(content="6 risques hors appétit.")]
+    agent = agent_mod.build_agent(model=ScriptedModel(script=script), collection=FakeCollection())
+    events = []
+    agent_mod.run("Risques hors appétit ?", "u.dupont", agent=agent, on_event=lambda k, d: events.append((k, d)))
+
+    assert [k for k, _ in events] == ["debut", "appel", "resultat", "reponse"]
+    assert events[1][1]["outil"] == "risques_hors_appetit" and events[1][1]["niveau"] == "N0"

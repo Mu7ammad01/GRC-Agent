@@ -33,3 +33,7 @@ def test_cle_manquante_message_clair(monkeypatch):
 def test_fournisseur_inconnu():
     with pytest.raises(SystemExit, match="LLM_PROVIDER inconnu"):
         build_model("mistral-cloud", "x")
+
+
+def test_ollama_contexte_elargi():
+    assert build_model("ollama", "mistral:7b").num_ctx == 8192

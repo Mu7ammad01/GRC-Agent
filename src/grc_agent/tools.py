@@ -32,7 +32,7 @@ def set_collection(collection) -> None:
 # --------------------------------------------------------------------------
 
 @tool
-def rechercher_textes(question: str, nb_resultats: int = 5) -> list[dict]:
+def rechercher_textes(question: str, nb_resultats: int = 4) -> list[dict]:
     """Recherche dans les textes réglementaires (DORA, AI Act, CSSF…) et les politiques
     internes de la banque. Retourne des extraits avec leur source et leur article.
     Toujours citer la source et l'article dans la réponse."""
@@ -46,7 +46,7 @@ def rechercher_textes(question: str, nb_resultats: int = 5) -> list[dict]:
             "source_id": meta.get("source_id"),
             "article": meta.get("article"),
             "niveau_norme": meta.get("norm_level"),
-            "extrait": text[:1200],
+            "extrait": text[:900],
         })
     return out
 
