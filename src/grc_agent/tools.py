@@ -43,6 +43,9 @@ SOURCE_KEYWORDS = {
 }
 
 
+ARTICLE_BUDGET = 4000
+
+
 def _passage(text: str, meta: dict, max_chars: int) -> dict:
     return {
         "source": meta.get("title"),
@@ -78,7 +81,17 @@ def rechercher_textes(question: str = "", nb_resultats: int = 4, source: Optiona
         got = _collection.get(where=where, include=["documents", "metadatas"])
         pairs = sorted(zip(got["documents"], got["metadatas"]), key=lambda p: p[1].get("position", 0))
         if pairs:
-            return [_passage(t, m, 1500) for t, m in pairs[:5]]
+            # Budget de ~4 000 caractères : sur processeur, chaque caractère renvoyé est relu
+            # par le modèle à chaque étape suivante (UC2 : 7 300 caractères, 9 min par étape).
+            out, budget = [], ARTICLE_BUDGET
+            for t, m in pairs:
+                if budget <= 0:
+                    break
+                out.append(_passage(t, m, min(1500, budget)))
+                budget -= len(out[-1]["extrait"])
+            if len(out) < len(pairs):
+                out.append({"note": f"article tronqué : {len(out)} passages sur {len(pairs)} renvoyés"})
+            return out
         # article introuvable dans l'index : recherche sémantique ci-dessous
 
     kwargs = {"where": {"source_id": source}} if source else {}

@@ -98,6 +98,7 @@ def test_uc1_ajoute_un_risque_et_le_relie(base, traces):
     assert row == [{"residual_score": 6}]
     assert db.fetch_all("SELECT 1 FROM risk_controls WHERE risk_id = 'R-031' AND control_id = 'C-028'")
     assert list(traces.glob("*.jsonl"))
+    assert result["actions_non_executees"] == []   # « ajouté » et « relié » sont prouvés par la trace
 
 
 def test_uc2_cite_dora_et_ajoute_une_obligation(base, traces):
@@ -172,3 +173,23 @@ def test_relance_quand_le_modele_annonce_un_outil_sans_l_appeler(base, traces):
     assert result["relances"] == 1 and "relance" in events
     assert [c["outil"] for c in result["appels_outils"]] == ["lister_obligations"]
     assert result["reponse"].startswith("Le référentiel")
+
+
+def test_alerte_si_la_reponse_affirme_des_actions_non_executees(base, traces):
+    """Comportement observé avec qwen2.5:7b (UC2) : actions racontées, 0 écriture."""
+    script = [
+        call("lister_obligations", {"reglementation": "REG-DORA"}, 1),
+        AIMessage(content="Obligation O-013 ajoutée et reliée à C-014. L'efficacité de C-009 a été mise à jour. "
+                          "L'incident I-001 est maintenant clôturé."),
+    ]
+    agent = agent_mod.build_agent(model=ScriptedModel(script=script), collection=FakeCollection())
+    result = agent_mod.run("Cartographie DORA article 30.", "u.weber", agent=agent)
+
+    assert result["ecritures"] == []
+    assert result["actions_non_executees"] == ["ajout", "liaison", "modification", "clôture"]
+
+
+def test_pas_d_alerte_pour_une_intention_future(base, traces):
+    script = [AIMessage(content="Je vais ajouter les obligations manquantes puis les relier aux contrôles.")]
+    agent = agent_mod.build_agent(model=ScriptedModel(script=script), collection=FakeCollection())
+    assert agent_mod.run("Cartographie DORA.", "u.weber", agent=agent)["actions_non_executees"] == []

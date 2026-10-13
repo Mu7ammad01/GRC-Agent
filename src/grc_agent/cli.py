@@ -75,6 +75,11 @@ def main() -> None:
               f"({', '.join(result['appels_simules'])}).\n"
               "    Les résultats affichés sont INVENTÉS. Utiliser un modèle qui gère l'appel d'outils "
               "(ex. --model qwen2.5:7b ou un fournisseur cloud).")
+    if result["actions_non_executees"]:
+        print("\n/!\\ ALERTE : la réponse affirme des actions qui n'ont PAS été exécutées "
+              f"({', '.join(result['actions_non_executees'])}).\n"
+              "    Aucun outil correspondant n'a été appelé : le registre n'a pas été modifié. "
+              "Seule la liste « Appels d'outils » fait foi.")
     if result.get("relances"):
         print(f"\n(relance automatique : {result['relances']} fois)")
     print(f"\n({result['fournisseur']} / {result['modele']}, {result['duree_s']} s, {len(result['ecritures'])} écriture(s), trace : {result['trace']})")

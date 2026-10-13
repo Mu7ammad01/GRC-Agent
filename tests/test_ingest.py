@@ -114,3 +114,18 @@ def test_recherche_d_article_sans_question():
     tools.set_collection(col)
     res = tools.rechercher_textes.invoke({"article": "30", "source": "REG-DORA", "nb_resultats": 1})
     assert res[0]["article"] == "Art. 30" and "contractuelles" in res[0]["extrait"]
+
+
+def test_article_long_tronque_au_budget():
+    chromadb = pytest.importorskip("chromadb")
+    pytest.importorskip("langchain_core")
+    from grc_agent import tools
+
+    long_article = "Article 30\n" + "\n".join(f"Paragraphe {i} : " + "clause contractuelle " * 40 for i in range(12))
+    chunks = chunk_text(long_article, {"source_id": "REG-DORA", "title": "DORA", "norm_level": 1})
+    col = chromadb.EphemeralClient().get_or_create_collection("t-budget", embedding_function=FakeEmbedding())
+    index(chunks, col)
+    tools.set_collection(col)
+    res = tools.rechercher_textes.invoke({"source": "REG-DORA", "article": "30"})
+    assert sum(len(r.get("extrait", "")) for r in res) <= tools.ARTICLE_BUDGET
+    assert "tronqué" in res[-1]["note"]

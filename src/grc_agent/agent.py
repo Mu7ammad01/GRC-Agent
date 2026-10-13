@@ -129,6 +129,29 @@ def summarize(messages) -> dict:
 PSEUDO_CALL_RE = re.compile(r'\{\s*"name"\s*:\s*"(\w+)"\s*,\s*"arguments"')
 
 
+# Actions affirmées dans la réponse finale (participes passés), et outils qui les réalisent réellement
+CLAIMED_ACTIONS = {
+    "ajout": (re.compile(r"\b(?:ajouté|ajoutée|ajoutés|ajoutées)\b|\bajout d['’]", re.IGNORECASE),
+              {"ajouter_risque", "ajouter_obligation"}),
+    "liaison": (re.compile(r"\b(?:relié|reliée|reliés|reliées)\b", re.IGNORECASE),
+                {"lier_risque_controle", "lier_obligation_controle"}),
+    "modification": (re.compile(r"\b(?:modifié|modifiée|modifiés|modifiées)\b|\b(?:été|est|sont)\s+mise?s?\s+à\s+jour|mise à jour de l['’]efficacité",
+                                re.IGNORECASE), {"modifier_efficacite_controle"}),
+    "clôture": (re.compile(r"\bclôtur(?:é|ée|és|ées)\b", re.IGNORECASE), {"cloturer_incident"}),
+}
+
+
+def unexecuted_actions(result: dict) -> list[str]:
+    """Actions que la réponse affirme avoir faites sans qu'aucun outil correspondant n'ait été appelé.
+
+    Observé avec qwen2.5:7b (J3, UC2) : « Obligation O-013 ajoutée… l'incident est clôturé » pour 0 écriture.
+    Le texte du modèle ne fait pas foi : seule la trace des appels compte."""
+    called = {c["outil"] for c in result["appels_outils"]}
+    text = str(result["reponse"])
+    return [kind for kind, (pattern, tools_) in CLAIMED_ACTIONS.items()
+            if pattern.search(text) and not called & tools_]
+
+
 MAX_RELANCES = 2
 
 
@@ -209,6 +232,7 @@ def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | No
         "ecritures": [c for c in result["appels_outils"] if c["niveau_cible"] in ("N2", "N3")],
         "appels_simules": simulated_tool_calls(result),
         "relances": relances,
+        "actions_non_executees": unexecuted_actions(result),
     })
     TRACES_DIR.mkdir(exist_ok=True)
     trace_file = TRACES_DIR / f"{datetime.now():%Y%m%d}.jsonl"
