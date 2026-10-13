@@ -31,7 +31,10 @@ Méthode :
 1. Commence toujours par consulter le registre et les textes avec tes outils.
 2. Cite systématiquement la source et l'article des textes que tu utilises.
 3. N'invente jamais un article, un chiffre ou un contrôle : si tu ne trouves pas, dis-le.
-4. Réponds en français, de façon structurée et concise.
+4. Pour un article précis, appelle rechercher_textes avec source et article (ex. REG-DORA, "30").
+5. N'appelle jamais deux fois un outil avec les mêmes arguments : exploite le résultat obtenu.
+6. Enchaîne toutes les étapes demandées avant de répondre ; ne demande pas à l'utilisateur de patienter.
+7. Réponds en français, de façon structurée et concise.
 
 Règles :
 - Ne clôture pas d'incident et ne modifie pas l'appétit pour le risque sans instruction explicite d'un responsable.
@@ -70,7 +73,9 @@ def build_model(provider: str | None = None, model: str | None = None):
         raise SystemExit(f"{key_var} manquante dans .env pour utiliser le fournisseur {provider}.")
     # Ollama tronque silencieusement au-delà de num_ctx : consignes + 14 outils + extraits
     # dépassent la valeur par défaut, d'où 8192 tokens.
-    kwargs = {"base_url": settings.ollama_url, "num_ctx": settings.ollama_num_ctx} if provider == "ollama" else {}
+    # keep_alive : garde le modèle chargé en mémoire entre deux questions (rechargement ~20 s sur CPU).
+    kwargs = ({"base_url": settings.ollama_url, "num_ctx": settings.ollama_num_ctx, "keep_alive": "30m"}
+              if provider == "ollama" else {})
     try:
         return init_chat_model(model, model_provider=provider, temperature=0, **kwargs)
     except ImportError as exc:

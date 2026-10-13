@@ -70,3 +70,32 @@ def test_politiques_indexees_avec_provenance(tmp_path):
 
     res = col.query(query_texts=["registre d'information des prestataires TIC"], n_results=1)
     assert "prestataires" in res["metadatas"][0][0]["source_id"]
+
+
+def test_decoupage_pdf_sans_lignes_vides():
+    """Texte tel qu'extrait d'un PDF EUR-Lex : une ligne par ligne imprimée, aucune ligne vide."""
+    text = ("préambule du règlement\nconsidérant ce qui suit\n"
+            "Article 29\nRisque de concentration\nLes entités financières évaluent…\n"
+            "Article 30\nDispositions contractuelles clés\n1. Les droits et obligations sont définis par écrit.\n"
+            "conformément à l'article 28, les entités…\n")
+    chunks = chunk_text(text, {"source_id": "REG-DORA"}, max_chars=1200, overlap=0)
+    art30 = [c for c in chunks if c.metadata.get("article") == "Art. 30"]
+    assert art30 and "Dispositions contractuelles clés" in art30[0].text
+    assert any(c.metadata.get("article") == "Art. 29" for c in chunks)
+    # une mention « l'article 28 » dans une phrase n'ouvre pas un nouvel article
+    assert not any(c.metadata.get("article") == "Art. 28" for c in chunks)
+
+
+def test_recherche_d_un_article_precis():
+    chromadb = pytest.importorskip("chromadb")
+    pytest.importorskip("langchain_core")
+    from grc_agent import tools
+
+    text = "Article 29\nConcentration.\nArticle 30\nDispositions contractuelles clés.\nArticle 31\nDésignation."
+    chunks = chunk_text(text, {"source_id": "REG-DORA", "title": "DORA", "norm_level": 1}, max_chars=200, overlap=0)
+    col = chromadb.EphemeralClient().get_or_create_collection("t-article", embedding_function=FakeEmbedding())
+    index(chunks, col)
+    tools.set_collection(col)
+    res = tools.rechercher_textes.invoke({"question": "Que dit l'article 30 de DORA ?"})
+    assert res and all(r["article"] == "Art. 30" for r in res)
+    assert "contractuelles" in res[0]["extrait"]

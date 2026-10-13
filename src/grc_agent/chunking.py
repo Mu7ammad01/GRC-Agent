@@ -7,6 +7,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ARTICLE_RE = re.compile(r"^\s*(Article|Art\.)\s+(\d+[a-z]?)\b", re.IGNORECASE)
+# Titre d'article seul sur sa ligne (« Article 30 »), tel qu'extrait des PDF EUR-Lex.
+# Les PDF n'ont pas de lignes vides entre paragraphes : sans cette coupure, les titres
+# d'articles se retrouvent au milieu d'un bloc et le numéro d'article est perdu.
+HEADING_LINE_RE = re.compile(r"\n[ \t]*(?=Article[ \t]+\d+[a-z]?[ \t]*\n)")
 
 
 @dataclass
@@ -40,7 +44,7 @@ def extract_text(path: Path) -> str:
 
 
 def _paragraphs(text: str) -> list[str]:
-    text = text.replace("\r\n", "\n")
+    text = HEADING_LINE_RE.sub("\n\n", text.replace("\r\n", "\n"))
     parts = re.split(r"\n\s*\n", text)
     return [re.sub(r"[ \t]+", " ", p).strip() for p in parts if p.strip()]
 

@@ -75,7 +75,7 @@ def get_collection(client=None, embedding=None, reset: bool = False):
     )
 
 
-def index(chunks: list[Chunk], collection, batch: int = 64) -> int:
+def index(chunks: list[Chunk], collection, batch: int = 64, progress: bool = False) -> int:
     for i in range(0, len(chunks), batch):
         part = chunks[i : i + batch]
         collection.upsert(
@@ -83,6 +83,8 @@ def index(chunks: list[Chunk], collection, batch: int = 64) -> int:
             documents=[c.text for c in part],
             metadatas=[c.metadata for c in part],
         )
+        if progress:
+            print(f"  {min(i + batch, len(chunks))}/{len(chunks)} passages vectorisés", flush=True)
     return len(chunks)
 
 
@@ -98,7 +100,10 @@ def main() -> None:
         collection = get_collection(reset=args.reset)
     except ValueError as exc:
         raise SystemExit(f"Chroma injoignable sur {settings.chroma_host}:{settings.chroma_port} — lancer `make up`. ({exc})")
-    n = index(chunks, collection)
+    with_article = sum(1 for c in chunks if c.metadata.get("article"))
+    print(f"{len(chunks)} passages à vectoriser ({with_article} rattachés à un article), "
+          "calcul des embeddings sur processeur…", flush=True)
+    n = index(chunks, collection, progress=True)
     print(f"{n} passages indexés dans la collection « {settings.chroma_collection} ».")
 
 

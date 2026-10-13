@@ -43,9 +43,13 @@ def call(name, args, i):
 
 
 class FakeCollection:
-    def query(self, query_texts, n_results):
-        return {"documents": [["Article 30 — Dispositions contractuelles clés …"]],
-                "metadatas": [[{"title": "DORA", "source_id": "REG-DORA", "article": "Art. 30", "norm_level": 1}]]}
+    META = {"title": "DORA", "source_id": "REG-DORA", "article": "Art. 30", "norm_level": 1, "position": 0}
+
+    def query(self, query_texts, n_results, where=None):
+        return {"documents": [["Article 30 — Dispositions contractuelles clés …"]], "metadatas": [[self.META]]}
+
+    def get(self, where=None, include=None):
+        return {"documents": ["Article 30 — Dispositions contractuelles clés …"], "metadatas": [self.META]}
 
 
 @pytest.fixture

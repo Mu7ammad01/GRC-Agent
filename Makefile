@@ -25,8 +25,8 @@ seed:          ## Régénère db/02_seed.sql et data/seed/*.csv
 corpus:        ## Télécharge les textes réglementaires publics
 	python scripts/download_corpus.py
 
-ingest:        ## Indexe le corpus et les politiques dans Chroma
-	PYTHONPATH=src python -m grc_agent.ingest
+ingest:        ## (Ré)indexe le corpus et les politiques dans Chroma
+	PYTHONPATH=src python -m grc_agent.ingest --reset
 
 test:          ## Lance les tests
 	PYTHONPATH=src pytest -q

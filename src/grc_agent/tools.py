@@ -12,6 +12,7 @@ Le niveau d'autorité cible de chaque outil est déclaré dans AUTHORITY_LEVEL.
 """
 from __future__ import annotations
 
+import re
 from typing import Optional
 
 from langchain_core.tools import tool
@@ -31,24 +32,56 @@ def set_collection(collection) -> None:
 # N0 — Lecture
 # --------------------------------------------------------------------------
 
+# Repérage d'une référence précise dans la question (« article 30 de DORA »)
+ARTICLE_IN_QUESTION = re.compile(r"\b(?:article|art\.?)\s*(\d+[a-z]?)\b", re.IGNORECASE)
+SOURCE_KEYWORDS = {
+    "REG-DORA": ("dora", "2022/2554"),
+    "REG-AIACT": ("ai act", "règlement sur l'ia", "2024/1689"),
+    "REG-C12552": ("12/552",),
+    "REG-R1202": ("12-02",),
+    "REG-L2004": ("loi du 12 novembre 2004", "loi de 2004"),
+}
+
+
+def _passage(text: str, meta: dict, max_chars: int) -> dict:
+    return {
+        "source": meta.get("title"),
+        "source_id": meta.get("source_id"),
+        "article": meta.get("article"),
+        "niveau_norme": meta.get("norm_level"),
+        "extrait": text[:max_chars],
+    }
+
+
 @tool
-def rechercher_textes(question: str, nb_resultats: int = 4) -> list[dict]:
+def rechercher_textes(question: str, nb_resultats: int = 4, source: Optional[str] = None,
+                      article: Optional[str] = None) -> list[dict]:
     """Recherche dans les textes réglementaires (DORA, AI Act, CSSF…) et les politiques
     internes de la banque. Retourne des extraits avec leur source et leur article.
+    Pour lire un article précis, indiquer source (REG-DORA, REG-AIACT, REG-C12552, REG-R1202,
+    REG-L2004) et article (ex. "30") : le texte complet de l'article est renvoyé, dans l'ordre.
     Toujours citer la source et l'article dans la réponse."""
     if _collection is None:
         return [{"erreur": "corpus non chargé"}]
-    res = _collection.query(query_texts=[question], n_results=max(1, min(nb_resultats, 10)))
-    out = []
-    for text, meta in zip(res["documents"][0], res["metadatas"][0]):
-        out.append({
-            "source": meta.get("title"),
-            "source_id": meta.get("source_id"),
-            "article": meta.get("article"),
-            "niveau_norme": meta.get("norm_level"),
-            "extrait": text[:900],
-        })
-    return out
+    # Référence déduite de la question si le modèle ne l'a pas précisée
+    if article is None and (m := ARTICLE_IN_QUESTION.search(question)):
+        article = m.group(1)
+    if source is None:
+        q = question.lower()
+        source = next((sid for sid, keys in SOURCE_KEYWORDS.items() if any(k in q for k in keys)), None)
+
+    if article:
+        art = article if article.lower().startswith("art") else f"Art. {article}"
+        where = {"article": art} if not source else {"$and": [{"source_id": source}, {"article": art}]}
+        got = _collection.get(where=where, include=["documents", "metadatas"])
+        pairs = sorted(zip(got["documents"], got["metadatas"]), key=lambda p: p[1].get("position", 0))
+        if pairs:
+            return [_passage(t, m, 1500) for t, m in pairs[:5]]
+        # article introuvable dans l'index : recherche sémantique ci-dessous
+
+    kwargs = {"where": {"source_id": source}} if source else {}
+    res = _collection.query(query_texts=[question], n_results=max(3, min(nb_resultats, 10)), **kwargs)
+    return [_passage(t, m, 900) for t, m in zip(res["documents"][0], res["metadatas"][0])]
 
 
 @tool
