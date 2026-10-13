@@ -142,17 +142,29 @@ def rechercher_controles(mot_cle: str) -> list[dict]:
 
 
 @tool
-def lister_obligations(reglementation: Optional[str] = None) -> list[dict]:
-    """Liste les obligations réglementaires connues et les contrôles qui les couvrent.
-    Filtre optionnel : identifiant de réglementation (REG-DORA, REG-C12552, REG-R1202, REG-L2004, REG-L1993)."""
+def lister_obligations(reglementation: Optional[str] = None, article: Optional[str] = None) -> list[dict]:
+    """Liste les obligations réglementaires du référentiel, avec les contrôles qui les couvrent
+    et l'efficacité de chacun, ex. « C-014 (partiel) ».
+    Filtres optionnels : reglementation (REG-DORA, REG-C12552, REG-R1202, REG-L2004, REG-L1993)
+    et article (ex. "30" : uniquement les obligations de cet article)."""
     sql = """SELECT o.id, o.regulation_id, o.article, o.summary, o.owner_unit_id,
-                    COALESCE(string_agg(oc.control_id, ', ' ORDER BY oc.control_id), '') AS controles
-             FROM obligations o LEFT JOIN obligation_controls oc ON oc.obligation_id = o.id"""
-    params: tuple = ()
+                    COALESCE(string_agg(oc.control_id || ' (' || c.effectiveness || ')', ', '
+                                        ORDER BY oc.control_id), 'aucun contrôle') AS controles
+             FROM obligations o
+             LEFT JOIN obligation_controls oc ON oc.obligation_id = o.id
+             LEFT JOIN controls c ON c.id = oc.control_id
+             WHERE TRUE"""
+    params: list = []
     if reglementation:
-        sql += " WHERE o.regulation_id = %s"
-        params = (reglementation,)
-    return db.fetch_all(sql + " GROUP BY o.id ORDER BY o.id", params)
+        sql += " AND o.regulation_id = %s"
+        params.append(reglementation)
+    if article:
+        # « 30 » trouve « Art. 30 » et « Art. 30, par. 3 », mais pas « Art. 3 » ni « Art. 300 »
+        num = re.sub(r"(?i)^\s*(art(icle)?\.?)\s*", "", str(article)).strip()
+        sql += " AND o.article ~ %s"
+        params.append(rf"^Art\. {re.escape(num)}([^0-9]|$)")
+    rows = db.fetch_all(sql + " GROUP BY o.id ORDER BY o.id", tuple(params))
+    return rows or [{"resultat": "aucune obligation dans le référentiel pour ces critères"}]
 
 
 @tool

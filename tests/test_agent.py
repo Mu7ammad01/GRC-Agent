@@ -193,3 +193,16 @@ def test_pas_d_alerte_pour_une_intention_future(base, traces):
     script = [AIMessage(content="Je vais ajouter les obligations manquantes puis les relier aux contrôles.")]
     agent = agent_mod.build_agent(model=ScriptedModel(script=script), collection=FakeCollection())
     assert agent_mod.run("Cartographie DORA.", "u.weber", agent=agent)["actions_non_executees"] == []
+
+
+def test_lister_obligations_filtre_par_article_et_donne_l_efficacite(base):
+    """UC2 avec qwen2.5:7b : sans filtre ni efficacité, le modèle a inventé 10 obligations
+    « couvertes efficacement » ; le référentiel n'en contient qu'une (O-015, C-014 partiel)."""
+    from grc_agent import tools
+
+    rows = tools.lister_obligations.invoke({"reglementation": "REG-DORA", "article": "30"})
+    assert [r["id"] for r in rows] == ["O-015"]
+    assert rows[0]["controles"] == "C-014 (partiel)"
+    assert tools.lister_obligations.invoke({"reglementation": "REG-DORA", "article": "3"})[0].get("resultat")
+    sans = [r for r in tools.lister_obligations.invoke({"reglementation": "REG-DORA"}) if r["id"] == "O-010"]
+    assert sans[0]["controles"] == "aucun contrôle"
