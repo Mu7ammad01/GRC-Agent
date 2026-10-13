@@ -28,6 +28,12 @@ services:
   ollama:
     image: ollama/ollama:latest
     restart: unless-stopped
+    environment:
+      # Sur processeur seul, le premier chargement de qwen2.5:7b (4,7 Go + réorganisation
+      # des poids) peut dépasser le délai par défaut de 5 min.
+      OLLAMA_LOAD_TIMEOUT: 15m
+      # Garde le modèle en mémoire entre deux questions.
+      OLLAMA_KEEP_ALIVE: 30m
     ports:
       - "11434:11434"
     volumes:

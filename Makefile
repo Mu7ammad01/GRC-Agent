@@ -1,7 +1,10 @@
 -include .env
 export
 
-.PHONY: services up down reset models seed corpus ingest test psql ask demo-uc1 demo-uc2 reset-db
+.PHONY: warmup services up down reset models seed corpus ingest test psql ask demo-uc1 demo-uc2 reset-db
+
+warmup:        ## Charge le LLM en mémoire avant une démo (plusieurs minutes sur processeur)
+	@echo "Chargement de $(LLM_MODEL)…"; curl -s $(OLLAMA_URL)/api/generate -d '{"model": "$(LLM_MODEL)", "keep_alive": "30m"}' && echo " -> prêt"
 
 services:      ## Lance les services et télécharge les modèles manquants (auto dans Codespaces)
 	bash scripts/start_services.sh

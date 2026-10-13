@@ -28,5 +28,12 @@ for model in "${LLM_MODEL:-qwen2.5:7b}" "${EMBED_MODEL:-nomic-embed-text}"; do
   fi
 done
 
+# Préchargement du LLM en arrière-plan : la première question n'attend pas le chargement
+if [ "${LLM_PROVIDER:-ollama}" = "ollama" ]; then
+  echo "Préchargement de ${LLM_MODEL:-qwen2.5:7b} en arrière-plan (plusieurs minutes sur processeur)…"
+  nohup curl -s "${OLLAMA_URL:-http://localhost:11434}/api/generate" \
+    -d "{\"model\": \"${LLM_MODEL:-qwen2.5:7b}\", \"keep_alive\": \"30m\"}" >/dev/null 2>&1 &
+fi
+
 df -h / | awk 'NR==2 {print "Disque : " $4 " libres (" $5 " utilisés)"}'
 echo "Services prêts. Si le corpus n'est pas indexé : make ingest"
