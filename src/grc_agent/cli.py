@@ -55,6 +55,8 @@ def main() -> None:
             print(f"  [{data['t']:>6} s] retour {data['outil']} ({data['taille']} caractères) — le modèle réfléchit…", flush=True)
         elif kind == "reponse":
             print(f"  [{data['t']:>6} s] réponse rédigée", flush=True)
+        elif kind == "relance":
+            print(f"  [{data['t']:>6} s] relance : le modèle a annoncé {data['outil']} sans l'appeler", flush=True)
 
     result = run(question, user_id=user, scenario=args.scenario, provider=args.provider,
                  model_name=args.model, on_event=progress)
@@ -73,6 +75,8 @@ def main() -> None:
               f"({', '.join(result['appels_simules'])}).\n"
               "    Les résultats affichés sont INVENTÉS. Utiliser un modèle qui gère l'appel d'outils "
               "(ex. --model qwen2.5:7b ou un fournisseur cloud).")
+    if result.get("relances"):
+        print(f"\n(relance automatique : {result['relances']} fois)")
     print(f"\n({result['fournisseur']} / {result['modele']}, {result['duree_s']} s, {len(result['ecritures'])} écriture(s), trace : {result['trace']})")
 
 

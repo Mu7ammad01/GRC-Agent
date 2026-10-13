@@ -99,3 +99,18 @@ def test_recherche_d_un_article_precis():
     res = tools.rechercher_textes.invoke({"question": "Que dit l'article 30 de DORA ?"})
     assert res and all(r["article"] == "Art. 30" for r in res)
     assert "contractuelles" in res[0]["extrait"]
+
+
+def test_recherche_d_article_sans_question():
+    """Appel observé avec qwen2.5:7b : source et article fournis, mais pas de question."""
+    chromadb = pytest.importorskip("chromadb")
+    pytest.importorskip("langchain_core")
+    from grc_agent import tools
+
+    text = "Article 29\nConcentration.\nArticle 30\nDispositions contractuelles clés."
+    chunks = chunk_text(text, {"source_id": "REG-DORA", "title": "DORA", "norm_level": 1}, max_chars=200, overlap=0)
+    col = chromadb.EphemeralClient().get_or_create_collection("t-sans-question", embedding_function=FakeEmbedding())
+    index(chunks, col)
+    tools.set_collection(col)
+    res = tools.rechercher_textes.invoke({"article": "30", "source": "REG-DORA", "nb_resultats": 1})
+    assert res[0]["article"] == "Art. 30" and "contractuelles" in res[0]["extrait"]

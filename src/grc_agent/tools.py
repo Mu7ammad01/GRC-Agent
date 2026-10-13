@@ -54,7 +54,7 @@ def _passage(text: str, meta: dict, max_chars: int) -> dict:
 
 
 @tool
-def rechercher_textes(question: str, nb_resultats: int = 4, source: Optional[str] = None,
+def rechercher_textes(question: str = "", nb_resultats: int = 4, source: Optional[str] = None,
                       article: Optional[str] = None) -> list[dict]:
     """Recherche dans les textes réglementaires (DORA, AI Act, CSSF…) et les politiques
     internes de la banque. Retourne des extraits avec leur source et leur article.
@@ -63,6 +63,8 @@ def rechercher_textes(question: str, nb_resultats: int = 4, source: Optional[str
     Toujours citer la source et l'article dans la réponse."""
     if _collection is None:
         return [{"erreur": "corpus non chargé"}]
+    if not question and not article:
+        return [{"erreur": "indiquer une question ou un article"}]
     # Référence déduite de la question si le modèle ne l'a pas précisée
     if article is None and (m := ARTICLE_IN_QUESTION.search(question)):
         article = m.group(1)
@@ -80,7 +82,7 @@ def rechercher_textes(question: str, nb_resultats: int = 4, source: Optional[str
         # article introuvable dans l'index : recherche sémantique ci-dessous
 
     kwargs = {"where": {"source_id": source}} if source else {}
-    res = _collection.query(query_texts=[question], n_results=max(3, min(nb_resultats, 10)), **kwargs)
+    res = _collection.query(query_texts=[question or f"Article {article}"], n_results=max(3, min(nb_resultats, 10)), **kwargs)
     return [_passage(t, m, 900) for t, m in zip(res["documents"][0], res["metadatas"][0])]
 
 

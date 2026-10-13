@@ -129,6 +129,21 @@ def summarize(messages) -> dict:
 PSEUDO_CALL_RE = re.compile(r'\{\s*"name"\s*:\s*"(\w+)"\s*,\s*"arguments"')
 
 
+MAX_RELANCES = 2
+
+
+def announced_tool(message) -> str | None:
+    """Outil que le modèle dit vouloir utiliser (« je vais utiliser lister_obligations ») sans l'appeler.
+
+    Fréquent avec les petits modèles locaux : ils décrivent l'étape suivante puis s'arrêtent."""
+    if not isinstance(message, AIMessage) or message.tool_calls:
+        return None
+    text = str(message.content)
+    if PSEUDO_CALL_RE.search(text):
+        return None   # appels simulés en JSON : signalés par appels_simules, pas relancés
+    return next((name for name in tools.AUTHORITY_LEVEL if name in text), None)
+
+
 def simulated_tool_calls(result: dict) -> list[str]:
     """Outils que le modèle a fait semblant d'appeler (JSON dans le texte, aucun appel réel).
 
@@ -153,24 +168,35 @@ def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | No
     step = 0
     if on_event:
         on_event("debut", {"fournisseur": provider, "modele": model_name})
-    # stream_mode="updates" : un événement par étape (réflexion du modèle ou exécution d'outils)
-    for update in agent.stream({"messages": list(messages)}, stream_mode="updates"):
-        for node, payload in update.items():
-            new = (payload or {}).get("messages", [])
-            messages.extend(new)
-            if not on_event:
-                continue
-            step += 1
-            elapsed = round(time.perf_counter() - start, 1)
-            for m in new:
-                if isinstance(m, AIMessage) and m.tool_calls:
-                    for tc in m.tool_calls:
-                        on_event("appel", {"etape": step, "t": elapsed, "outil": tc["name"], "arguments": tc["args"],
-                                           "niveau": tools.AUTHORITY_LEVEL.get(tc["name"], "?")})
-                elif isinstance(m, ToolMessage):
-                    on_event("resultat", {"etape": step, "t": elapsed, "outil": m.name, "taille": len(str(m.content))})
-                elif isinstance(m, AIMessage):
-                    on_event("reponse", {"etape": step, "t": elapsed})
+    relances = 0
+    while True:
+        # stream_mode="updates" : un événement par étape (réflexion du modèle ou exécution d'outils)
+        for update in agent.stream({"messages": list(messages)}, stream_mode="updates"):
+            for node, payload in update.items():
+                new = (payload or {}).get("messages", [])
+                messages.extend(new)
+                if not on_event:
+                    continue
+                step += 1
+                elapsed = round(time.perf_counter() - start, 1)
+                for m in new:
+                    if isinstance(m, AIMessage) and m.tool_calls:
+                        for tc in m.tool_calls:
+                            on_event("appel", {"etape": step, "t": elapsed, "outil": tc["name"], "arguments": tc["args"],
+                                               "niveau": tools.AUTHORITY_LEVEL.get(tc["name"], "?")})
+                    elif isinstance(m, ToolMessage):
+                        on_event("resultat", {"etape": step, "t": elapsed, "outil": m.name, "taille": len(str(m.content))})
+                    elif isinstance(m, AIMessage):
+                        on_event("reponse", {"etape": step, "t": elapsed})
+        announced = announced_tool(messages[-1])
+        if not announced or relances >= MAX_RELANCES:
+            break
+        # Le modèle a annoncé un outil au lieu de l'appeler : on le relance (limité à MAX_RELANCES)
+        relances += 1
+        if on_event:
+            on_event("relance", {"t": round(time.perf_counter() - start, 1), "outil": announced})
+        messages.append(HumanMessage(f"Continue : appelle maintenant l'outil {announced} au lieu de l'annoncer, "
+                                     "puis termine les étapes demandées."))
     result = summarize(messages)
     result.update({
         "horodatage": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -182,6 +208,7 @@ def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | No
         "duree_s": round(time.perf_counter() - start, 1),
         "ecritures": [c for c in result["appels_outils"] if c["niveau_cible"] in ("N2", "N3")],
         "appels_simules": simulated_tool_calls(result),
+        "relances": relances,
     })
     TRACES_DIR.mkdir(exist_ok=True)
     trace_file = TRACES_DIR / f"{datetime.now():%Y%m%d}.jsonl"

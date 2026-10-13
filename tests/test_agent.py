@@ -155,3 +155,20 @@ def test_pas_d_alerte_quand_les_outils_sont_vraiment_appeles(base, traces):
     script = [call("risques_hors_appetit", {}, 1), AIMessage(content="6 risques hors appétit.")]
     agent = agent_mod.build_agent(model=ScriptedModel(script=script), collection=FakeCollection())
     assert agent_mod.run("Risques hors appétit ?", "u.dupont", agent=agent)["appels_simules"] == []
+
+
+def test_relance_quand_le_modele_annonce_un_outil_sans_l_appeler(base, traces):
+    """Comportement observé avec qwen2.5:7b : « Je vais utiliser la fonction lister_obligations… » puis arrêt."""
+    script = [
+        AIMessage(content="Ensuite, je vais utiliser la fonction `lister_obligations` pour vérifier le référentiel."),
+        call("lister_obligations", {"reglementation": "REG-DORA"}, 1),
+        AIMessage(content="Le référentiel contient les obligations DORA suivantes : …"),
+    ]
+    agent = agent_mod.build_agent(model=ScriptedModel(script=script), collection=FakeCollection())
+    events = []
+    result = agent_mod.run("Cartographie DORA article 30.", "u.weber", agent=agent,
+                           on_event=lambda k, d: events.append(k))
+
+    assert result["relances"] == 1 and "relance" in events
+    assert [c["outil"] for c in result["appels_outils"]] == ["lister_obligations"]
+    assert result["reponse"].startswith("Le référentiel")
