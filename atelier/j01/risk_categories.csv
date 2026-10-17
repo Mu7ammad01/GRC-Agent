@@ -1,0 +1,16 @@
+id,name,family
+OP-FI,Fraude interne,operationnel
+OP-FE,Fraude externe,operationnel
+OP-RH,Pratiques en matière d'emploi et sécurité au travail,operationnel
+OP-CLI,"Clients, produits et pratiques commerciales",operationnel
+OP-DOM,Dommages aux actifs corporels,operationnel
+OP-SYS,Interruption d'activité et dysfonctionnement des systèmes,operationnel
+OP-EXE,"Exécution, livraison et gestion des processus",operationnel
+TIC-CYB,Cybersécurité,tic
+TIC-TIERS,Risque lié aux prestataires tiers de services TIC,tic
+TIC-DISP,Disponibilité et continuité des TIC,tic
+TIC-DATA,Intégrité et confidentialité des données,tic
+CO-BC,Blanchiment de capitaux et financement du terrorisme,conformite
+CO-SAN,Sanctions financières internationales,conformite
+CO-JUR,Risque juridique et réglementaire,conformite
+CO-REP,Risque de réputation,conformite
