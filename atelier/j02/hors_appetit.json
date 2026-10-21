@@ -1,0 +1,44 @@
+[
+  {
+    "id": "R-001",
+    "titre": "Rançongiciel sur le SI central",
+    "famille": "tic",
+    "score": 10,
+    "seuil": 9
+  },
+  {
+    "id": "R-004",
+    "titre": "Défaillance du prestataire cloud de la banque en ligne",
+    "famille": "tic",
+    "score": 10,
+    "seuil": 9
+  },
+  {
+    "id": "R-008",
+    "titre": "Échec de restauration des sauvegardes",
+    "famille": "tic",
+    "score": 10,
+    "seuil": 9
+  },
+  {
+    "id": "R-023",
+    "titre": "Défaut de vigilance à l'entrée en relation",
+    "famille": "conformite",
+    "score": 8,
+    "seuil": 6
+  },
+  {
+    "id": "R-024",
+    "titre": "Alertes de surveillance des transactions non traitées",
+    "famille": "conformite",
+    "score": 9,
+    "seuil": 6
+  },
+  {
+    "id": "R-030",
+    "titre": "Atteinte à la réputation après un incident médiatisé",
+    "famille": "conformite",
+    "score": 8,
+    "seuil": 6
+  }
+]

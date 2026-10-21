@@ -1,0 +1,21 @@
+id,occurred_on,title,description,category_id,risk_id,gross_loss_eur,recovered_eur,major_ict,status
+I-001,2026-01-12,Campagne d'hameçonnage réussie,Trois collaborateurs ont saisi leurs identifiants sur un faux portail ; comptes bloqués sous 2 heures.,TIC-CYB,R-002,0,0,False,clos
+I-002,2026-01-27,Erreur de saisie sur un virement,Virement de 48 000 EUR envoyé au mauvais bénéficiaire.,OP-EXE,R-016,48000,41000,False,clos
+I-003,2026-02-09,Panne du système de paiement,Arrêt de 5 heures du système de paiement après une mise à jour du prestataire.,TIC-DISP,R-007,22000,0,True,clos
+I-004,2026-02-21,Fraude au président,Faux virement de 135 000 EUR demandé par un courriel usurpant le directeur financier.,OP-FE,R-013,135000,60000,False,clos
+I-005,2026-03-04,Fraude carte sur un commerçant en ligne,Série de transactions frauduleuses détectées par le scoring.,OP-FE,R-014,18500,12000,False,clos
+I-006,2026-03-18,Retard de revue KYC,120 dossiers à risque élevé non revus dans les délais.,CO-BC,R-023,0,0,False,en_analyse
+I-007,2026-04-02,Échec d'un test de restauration,La restauration de la base clients a échoué lors du test trimestriel.,TIC-DISP,R-008,0,0,False,en_analyse
+I-008,2026-04-16,Données clients collées dans un outil d'IA public,Un conseiller a soumis un extrait de portefeuille à un chatbot public.,TIC-DATA,R-010,0,0,False,clos
+I-009,2026-04-29,Régression après mise en production,Calcul erroné des intérêts sur 340 crédits pendant 2 jours.,OP-SYS,R-022,9500,0,False,clos
+I-010,2026-05-11,Accumulation d'alertes AML,Plus de 400 alertes de plus de 30 jours en attente d'analyse.,CO-BC,R-024,0,0,False,ouvert
+I-011,2026-05-23,Indisponibilité de la banque en ligne,Panne de 9 heures chez le prestataire cloud ; 30 % des clients affectés.,TIC-TIERS,R-004,64000,25000,True,clos
+I-012,2026-06-05,Compte administrateur non désactivé,"Compte d'un prestataire parti actif depuis 4 mois, sans usage constaté.",TIC-CYB,R-003,0,0,False,clos
+I-013,2026-06-19,Réclamations en retard,45 réclamations traitées au-delà du délai d'un mois.,OP-CLI,R-017,3000,0,False,clos
+I-014,2026-07-01,Contrat TIC sans clause de sortie,Renouvellement d'un contrat critique sans stratégie de sortie.,TIC-TIERS,R-005,0,0,False,en_analyse
+I-015,2026-07-14,Tentative de rançongiciel bloquée,Charge malveillante bloquée par l'EDR sur un serveur de fichiers.,TIC-CYB,R-001,0,0,False,clos
+I-016,2026-07-30,Ouverture de compte avec faux documents,"Compte ouvert avec un passeport falsifié, détecté à la revue.",OP-FE,R-015,7200,0,False,clos
+I-017,2026-08-12,Correctif critique non appliqué,Vulnérabilité critique sur le VPN non corrigée après 45 jours.,TIC-CYB,R-001,0,0,False,ouvert
+I-018,2026-08-25,Faux positif de sanctions bloquant un paiement,Paiement bloqué 3 jours par homonymie ; réclamation du client.,CO-SAN,R-026,1500,0,False,clos
+I-019,2026-09-08,Erreur de rapprochement,"Écart de 12 000 EUR sur un compte nostro, régularisé.",OP-EXE,R-016,12000,12000,False,clos
+I-020,2026-09-21,Fuite de données par courriel,Envoi par erreur d'un fichier de 800 clients à un tiers.,TIC-DATA,R-009,15000,0,False,en_analyse
