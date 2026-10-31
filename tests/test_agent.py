@@ -206,3 +206,15 @@ def test_lister_obligations_filtre_par_article_et_donne_l_efficacite(base):
     assert tools.lister_obligations.invoke({"reglementation": "REG-DORA", "article": "3"})[0].get("resultat")
     sans = [r for r in tools.lister_obligations.invoke({"reglementation": "REG-DORA"}) if r["id"] == "O-010"]
     assert sans[0]["controles"] == "aucun contrôle"
+
+
+def test_texte_des_blocs_gemini():
+    """Gemini 3 renvoie une liste de blocs (texte + signature de réflexion) : on ne garde que le texte."""
+    contenu = [{"type": "text", "text": "Bonjour"}, {"type": "text", "text": " !", "extras": {"signature": "abc"}}]
+    assert agent_mod.message_text(contenu) == "Bonjour !"
+    assert agent_mod.message_text("réponse simple") == "réponse simple"
+
+
+def test_outil_annonce_dans_des_blocs():
+    msg = AIMessage(content=[{"type": "text", "text": "Je vais utiliser lister_obligations."}])
+    assert agent_mod.announced_tool(msg) == "lister_obligations"

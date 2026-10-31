@@ -30,6 +30,15 @@ def test_cle_manquante_message_clair(monkeypatch):
         build_model("anthropic", "claude-sonnet-5")
 
 
+def test_gemini_vertex_sans_cle(monkeypatch):
+    pytest.importorskip("langchain_google_genai")
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.setenv("GOOGLE_GENAI_USE_VERTEXAI", "true")
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "projet-de-test")
+    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "global")
+    assert type(build_model("google_genai", "gemini-test")).__name__ == "ChatGoogleGenerativeAI"
+
+
 def test_fournisseur_inconnu():
     with pytest.raises(SystemExit, match="LLM_PROVIDER inconnu"):
         build_model("mistral-cloud", "x")

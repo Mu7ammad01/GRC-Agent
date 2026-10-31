@@ -69,7 +69,9 @@ def build_model(provider: str | None = None, model: str | None = None):
     if provider not in PROVIDER_PACKAGES:
         raise SystemExit(f"LLM_PROVIDER inconnu : {provider}. Valeurs possibles : {', '.join(PROVIDER_PACKAGES)}")
     key_var = API_KEY_VARS.get(provider)
-    if key_var and not os.getenv(key_var):
+    # Gemini via Vertex AI (Gemini Enterprise Agent Platform) : identifiants ADC de gcloud, pas de clé d'API
+    vertex = provider == "google_genai" and os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").lower() == "true"
+    if key_var and not os.getenv(key_var) and not vertex:
         raise SystemExit(f"{key_var} manquante dans .env pour utiliser le fournisseur {provider}.")
     # Ollama tronque silencieusement au-delà de num_ctx : consignes + 14 outils + extraits
     # dépassent la valeur par défaut, d'où 8192 tokens.
@@ -109,6 +111,14 @@ def user_context(user_id: str) -> str:
     return f"[Utilisateur : {u['full_name']} ({u['id']}), rôle {u['role']}, unité {u['unit_name']}]"
 
 
+def message_text(content) -> str:
+    """Texte d'un message, qu'il soit une chaîne (Ollama) ou une liste de blocs (Gemini 3 :
+    blocs « text » accompagnés de signatures de réflexion, à ne pas garder)."""
+    if isinstance(content, str):
+        return content
+    return "".join(b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text")
+
+
 def summarize(messages) -> dict:
     """Extrait la réponse finale et la liste des appels d'outils d'une conversation."""
     calls, results = [], {}
@@ -121,7 +131,8 @@ def summarize(messages) -> dict:
             results[m.tool_call_id] = str(m.content)[:2000]
     for c in calls:
         c["resultat"] = results.get(c.pop("id"))
-    final = next((m.content for m in reversed(messages) if isinstance(m, AIMessage) and m.content), "")
+    final = next((message_text(m.content) for m in reversed(messages)
+                  if isinstance(m, AIMessage) and message_text(m.content)), "")
     return {"reponse": final, "appels_outils": calls}
 
 
@@ -161,7 +172,7 @@ def announced_tool(message) -> str | None:
     Fréquent avec les petits modèles locaux : ils décrivent l'étape suivante puis s'arrêtent."""
     if not isinstance(message, AIMessage) or message.tool_calls:
         return None
-    text = str(message.content)
+    text = message_text(message.content)
     if PSEUDO_CALL_RE.search(text):
         return None   # appels simulés en JSON : signalés par appels_simules, pas relancés
     return next((name for name in tools.AUTHORITY_LEVEL if name in text), None)
