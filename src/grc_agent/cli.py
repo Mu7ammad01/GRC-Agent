@@ -57,6 +57,8 @@ def main() -> None:
             print(f"  [{data['t']:>6} s] réponse rédigée", flush=True)
         elif kind == "relance":
             print(f"  [{data['t']:>6} s] relance : le modèle a annoncé {data['outil']} sans l'appeler", flush=True)
+        elif kind == "erreur":
+            print(f"  [{data['t']:>6} s] ERREUR : {data['message']}", flush=True)
 
     result = run(question, user_id=user, scenario=args.scenario, provider=args.provider,
                  model_name=args.model, on_event=progress)
@@ -80,6 +82,9 @@ def main() -> None:
               f"({', '.join(result['actions_non_executees'])}).\n"
               "    Aucun outil correspondant n'a été appelé : le registre n'a pas été modifié. "
               "Seule la liste « Appels d'outils » fait foi.")
+    if result.get("erreur"):
+        print(f"\n/!\\ ERREUR : le passage a été interrompu ({result['erreur']}).\n"
+              "    La trace est tout de même enregistrée ; la réponse ci-dessus est incomplète.")
     if result.get("relances"):
         print(f"\n(relance automatique : {result['relances']} fois)")
     print(f"\n({result['fournisseur']} / {result['modele']}, {result['duree_s']} s, {len(result['ecritures'])} écriture(s), trace : {result['trace']})")

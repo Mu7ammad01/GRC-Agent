@@ -13,11 +13,16 @@ Le niveau d'autorité cible de chaque outil est déclaré dans AUTHORITY_LEVEL.
 from __future__ import annotations
 
 import re
+import threading
 from typing import Optional
 
 from langchain_core.tools import tool
 
 from . import db
+
+# Les modèles cloud (Gemini) appellent plusieurs outils en parallèle : sans verrou, deux ajouts
+# simultanés calculent le même identifiant (UniqueViolation observée le 31 octobre 2026).
+_VERROU_IDENTIFIANTS = threading.Lock()
 
 # Collection Chroma injectée au démarrage (voir agent.build_agent)
 _collection = None
@@ -197,14 +202,15 @@ def ajouter_risque(titre: str, description: str, categorie: str, processus: str,
     """Ajoute un risque au registre. Cotations de 1 à 5. Catégories : OP-FI, OP-FE, OP-RH, OP-CLI,
     OP-DOM, OP-SYS, OP-EXE, TIC-CYB, TIC-TIERS, TIC-DISP, TIC-DATA, CO-BC, CO-SAN, CO-JUR, CO-REP.
     Unités : RET, PRI, TRE, OPS, DSI, RH, RSK, CMP."""
-    new_id = db.next_id("risks", "R")
-    db.execute(
-        """INSERT INTO risks (id, title, description, category_id, process, owner_unit_id,
-               inherent_likelihood, inherent_impact, residual_likelihood, residual_impact, status, last_review)
-           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'actif', CURRENT_DATE)""",
-        (new_id, titre, description, categorie, processus, unite,
-         vraisemblance_brute, impact_brut, vraisemblance_residuelle, impact_residuel),
-    )
+    with _VERROU_IDENTIFIANTS:
+        new_id = db.next_id("risks", "R")
+        db.execute(
+            """INSERT INTO risks (id, title, description, category_id, process, owner_unit_id,
+                   inherent_likelihood, inherent_impact, residual_likelihood, residual_impact, status, last_review)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'actif', CURRENT_DATE)""",
+            (new_id, titre, description, categorie, processus, unite,
+             vraisemblance_brute, impact_brut, vraisemblance_residuelle, impact_residuel),
+        )
     return {"statut": "ajouté", "id": new_id}
 
 
@@ -221,11 +227,12 @@ def lier_risque_controle(risk_id: str, control_id: str) -> dict:
 @tool
 def ajouter_obligation(reglementation: str, article: str, resume: str, unite: str) -> dict:
     """Ajoute une obligation réglementaire extraite d'un texte (ex. reglementation=REG-DORA, article='Art. 28')."""
-    new_id = db.next_id("obligations", "O")
-    db.execute(
-        "INSERT INTO obligations (id, regulation_id, article, summary, owner_unit_id) VALUES (%s, %s, %s, %s, %s)",
-        (new_id, reglementation, article, resume, unite),
-    )
+    with _VERROU_IDENTIFIANTS:
+        new_id = db.next_id("obligations", "O")
+        db.execute(
+            "INSERT INTO obligations (id, regulation_id, article, summary, owner_unit_id) VALUES (%s, %s, %s, %s, %s)",
+            (new_id, reglementation, article, resume, unite),
+        )
     return {"statut": "ajoutée", "id": new_id}
 
 

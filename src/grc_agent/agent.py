@@ -203,34 +203,41 @@ def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | No
     if on_event:
         on_event("debut", {"fournisseur": provider, "modele": model_name})
     relances = 0
-    while True:
-        # stream_mode="updates" : un événement par étape (réflexion du modèle ou exécution d'outils)
-        for update in agent.stream({"messages": list(messages)}, stream_mode="updates"):
-            for node, payload in update.items():
-                new = (payload or {}).get("messages", [])
-                messages.extend(new)
-                if not on_event:
-                    continue
-                step += 1
-                elapsed = round(time.perf_counter() - start, 1)
-                for m in new:
-                    if isinstance(m, AIMessage) and m.tool_calls:
-                        for tc in m.tool_calls:
-                            on_event("appel", {"etape": step, "t": elapsed, "outil": tc["name"], "arguments": tc["args"],
-                                               "niveau": tools.AUTHORITY_LEVEL.get(tc["name"], "?")})
-                    elif isinstance(m, ToolMessage):
-                        on_event("resultat", {"etape": step, "t": elapsed, "outil": m.name, "taille": len(str(m.content))})
-                    elif isinstance(m, AIMessage):
-                        on_event("reponse", {"etape": step, "t": elapsed})
-        announced = announced_tool(messages[-1])
-        if not announced or relances >= MAX_RELANCES:
-            break
-        # Le modèle a annoncé un outil au lieu de l'appeler : on le relance (limité à MAX_RELANCES)
-        relances += 1
+    erreur = None
+    # Une erreur (outil, réseau, quota) ne doit pas faire perdre la trace du passage : traçabilité (M8)
+    try:
+        while True:
+            # stream_mode="updates" : un événement par étape (réflexion du modèle ou exécution d'outils)
+            for update in agent.stream({"messages": list(messages)}, stream_mode="updates"):
+                for node, payload in update.items():
+                    new = (payload or {}).get("messages", [])
+                    messages.extend(new)
+                    if not on_event:
+                        continue
+                    step += 1
+                    elapsed = round(time.perf_counter() - start, 1)
+                    for m in new:
+                        if isinstance(m, AIMessage) and m.tool_calls:
+                            for tc in m.tool_calls:
+                                on_event("appel", {"etape": step, "t": elapsed, "outil": tc["name"], "arguments": tc["args"],
+                                                   "niveau": tools.AUTHORITY_LEVEL.get(tc["name"], "?")})
+                        elif isinstance(m, ToolMessage):
+                            on_event("resultat", {"etape": step, "t": elapsed, "outil": m.name, "taille": len(str(m.content))})
+                        elif isinstance(m, AIMessage):
+                            on_event("reponse", {"etape": step, "t": elapsed})
+            announced = announced_tool(messages[-1])
+            if not announced or relances >= MAX_RELANCES:
+                break
+            # Le modèle a annoncé un outil au lieu de l'appeler : on le relance (limité à MAX_RELANCES)
+            relances += 1
+            if on_event:
+                on_event("relance", {"t": round(time.perf_counter() - start, 1), "outil": announced})
+            messages.append(HumanMessage(f"Continue : appelle maintenant l'outil {announced} au lieu de l'annoncer, "
+                                         "puis termine les étapes demandées."))
+    except Exception as exc:  # noqa: BLE001 (on enregistre toute erreur, puis on écrit la trace)
+        erreur = f"{type(exc).__name__}: {exc}"[:500]
         if on_event:
-            on_event("relance", {"t": round(time.perf_counter() - start, 1), "outil": announced})
-        messages.append(HumanMessage(f"Continue : appelle maintenant l'outil {announced} au lieu de l'annoncer, "
-                                     "puis termine les étapes demandées."))
+            on_event("erreur", {"t": round(time.perf_counter() - start, 1), "message": erreur})
     result = summarize(messages)
     result.update({
         "horodatage": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -244,6 +251,7 @@ def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | No
         "appels_simules": simulated_tool_calls(result),
         "relances": relances,
         "actions_non_executees": unexecuted_actions(result),
+        "erreur": erreur,
     })
     TRACES_DIR.mkdir(exist_ok=True)
     trace_file = TRACES_DIR / f"{datetime.now():%Y%m%d}.jsonl"

@@ -17,6 +17,7 @@ from langchain_core.outputs import ChatGeneration, ChatResult  # noqa: E402
 
 from grc_agent import agent as agent_mod  # noqa: E402
 from grc_agent import db  # noqa: E402
+from grc_agent import tools  # noqa: E402
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -218,3 +219,27 @@ def test_texte_des_blocs_gemini():
 def test_outil_annonce_dans_des_blocs():
     msg = AIMessage(content=[{"type": "text", "text": "Je vais utiliser lister_obligations."}])
     assert agent_mod.announced_tool(msg) == "lister_obligations"
+
+
+def test_ajouts_paralleles_sans_collision_d_identifiant(base):
+    """Gemini appelle plusieurs outils en parallèle : deux ajouts simultanés ne doivent pas
+    calculer le même identifiant (UniqueViolation sur obligations_pkey, observé le 31 octobre)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    args = {"reglementation": "REG-DORA", "article": "Art. 28", "resume": "test d'ajout parallèle", "unite": "CMP"}
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        ids = list(pool.map(lambda _: tools.ajouter_obligation.invoke(args)["id"], range(4)))
+    assert len(set(ids)) == 4
+
+
+def test_une_erreur_pendant_le_passage_est_tracee(base, traces):
+    """Un passage interrompu par une erreur doit quand même laisser une trace (traçabilité, M8)."""
+
+    class AgentEnPanne:
+        def stream(self, *args, **kwargs):
+            raise RuntimeError("panne simulée")
+
+    result = agent_mod.run("Question de test", agent=AgentEnPanne(), scenario="test")
+    assert "panne simulée" in result["erreur"]
+    lignes = list(traces.glob("*.jsonl"))[0].read_text(encoding="utf-8").splitlines()
+    assert "panne simulée" in lignes[-1]
