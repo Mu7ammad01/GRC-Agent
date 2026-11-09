@@ -211,6 +211,8 @@ def ajouter_risque(titre: str, description: str, categorie: str, processus: str,
             (new_id, titre, description, categorie, processus, unite,
              vraisemblance_brute, impact_brut, vraisemblance_residuelle, impact_residuel),
         )
+    db.journaliser(acteur_courant(), "ajouter_risque", "N2", "autorise",
+                   {"id": new_id, "titre": titre, "categorie": categorie})
     return {"statut": "ajouté", "id": new_id}
 
 
@@ -221,8 +223,9 @@ def lier_risque_controle(risk_id: str, control_id: str) -> dict:
         "INSERT INTO risk_controls (risk_id, control_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
         (risk_id, control_id),
     )
+    db.journaliser(acteur_courant(), "lier_risque_controle", "N2", "autorise",
+                   {"risk_id": risk_id, "control_id": control_id})
     return {"statut": "lié" if n else "déjà lié", "risk_id": risk_id, "control_id": control_id}
-
 
 @tool
 def ajouter_obligation(reglementation: str, article: str, resume: str, unite: str) -> dict:
@@ -233,8 +236,9 @@ def ajouter_obligation(reglementation: str, article: str, resume: str, unite: st
             "INSERT INTO obligations (id, regulation_id, article, summary, owner_unit_id) VALUES (%s, %s, %s, %s, %s)",
             (new_id, reglementation, article, resume, unite),
         )
+    db.journaliser(acteur_courant(), "ajouter_obligation", "N2", "autorise",
+                   {"id": new_id, "reglementation": reglementation, "article": article})
     return {"statut": "ajoutée", "id": new_id}
-
 
 @tool
 def lier_obligation_controle(obligation_id: str, control_id: str) -> dict:
@@ -243,15 +247,17 @@ def lier_obligation_controle(obligation_id: str, control_id: str) -> dict:
         "INSERT INTO obligation_controls (obligation_id, control_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
         (obligation_id, control_id),
     )
+    db.journaliser(acteur_courant(), "lier_obligation_controle", "N2", "autorise",
+                   {"obligation_id": obligation_id, "control_id": control_id})
     return {"statut": "lié" if n else "déjà lié", "obligation_id": obligation_id, "control_id": control_id}
-
 
 @tool
 def modifier_efficacite_controle(control_id: str, efficacite: str) -> dict:
     """Modifie l'efficacité d'un contrôle : efficace, partiel, inefficace ou non_teste."""
     n = db.execute("UPDATE controls SET effectiveness = %s WHERE id = %s", (efficacite, control_id))
+    db.journaliser(acteur_courant(), "modifier_efficacite_controle", "N2", "autorise",
+                   {"control_id": control_id, "efficacite": efficacite})
     return {"statut": "modifié" if n else "introuvable", "control_id": control_id, "efficacite": efficacite}
-
 
 # --------------------------------------------------------------------------
 # N3 cible — Interdit à l'agent (laissé accessible ici : faille volontaire)
@@ -261,8 +267,9 @@ def modifier_efficacite_controle(control_id: str, efficacite: str) -> dict:
 def cloturer_incident(incident_id: str) -> dict:
     """Clôture un incident."""
     n = db.execute("UPDATE incidents SET status = 'clos' WHERE id = %s", (incident_id,))
+    db.journaliser(acteur_courant(), "cloturer_incident", "N3", "autorise",
+                   {"incident_id": incident_id, "lignes": n})
     return {"statut": "clos" if n else "introuvable", "incident_id": incident_id}
-
 
 ALL_TOOLS = [
     rechercher_textes, lister_risques, controles_du_risque, rechercher_controles,
@@ -270,6 +277,17 @@ ALL_TOOLS = [
     ajouter_risque, lier_risque_controle, ajouter_obligation, lier_obligation_controle,
     modifier_efficacite_controle, cloturer_incident,
 ]
+
+_ACTEUR = "inconnu"
+
+def definir_acteur(user_id):
+    """Mémorise l'utilisateur courant pour la journalisation (appelé par run())."""
+    global _ACTEUR
+    _ACTEUR = user_id or "inconnu"
+
+def acteur_courant():
+    """Renvoie l'utilisateur courant (l'acteur à inscrire au journal)."""
+    return _ACTEUR
 
 # Niveau d'autorité CIBLE (appliqué par la couche OPA en semaine 2, ignoré en J3)
 AUTHORITY_LEVEL = {

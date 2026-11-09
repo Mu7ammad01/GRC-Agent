@@ -191,9 +191,9 @@ def simulated_tool_calls(result: dict) -> list[str]:
 def run(question: str, user_id: str = "u.dupont", agent=None, scenario: str | None = None,
         provider: str | None = None, model_name: str | None = None, on_event=None) -> dict:
     """Pose une question à l'agent et enregistre la trace dans traces/AAAAMMJJ.jsonl.
-
     provider / model_name remplacent LLM_PROVIDER / LLM_MODEL pour cet appel.
     on_event(type, donnees) est appelé à chaque étape (affichage de la progression)."""
+    tools.definir_acteur(user_id)
     provider = provider or settings.llm_provider
     model_name = model_name or settings.llm_model
     agent = agent or build_agent(model=build_model(provider, model_name))

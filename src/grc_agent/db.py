@@ -8,8 +8,12 @@ from typing import Any, Iterator
 
 import psycopg
 from psycopg.rows import dict_row
-
 from .config import settings
+
+import hashlib
+import json
+import threading
+from psycopg.types.json import Json
 
 _database_url = settings.database_url
 
@@ -57,3 +61,21 @@ def next_id(table: str, prefix: str) -> str:
     )
     last = int(rows[0]["id"].split("-")[1]) if rows else 0
     return f"{prefix}-{last + 1:03d}"
+_VERROU_JOURNAL = threading.Lock()
+
+
+def journaliser(acteur, evenement, niveau, decision, payload):
+    """Ajoute une ligne au journal d'audit, chaînée par empreinte (anti-répudiation)."""
+    with _VERROU_JOURNAL, connect() as conn:
+        last = conn.execute("SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1").fetchone()
+        prev_hash = last["hash"] if last else None
+        corps = json.dumps({"acteur": acteur, "evenement": evenement, "niveau": niveau,
+                            "decision": decision, "payload": payload, "prev_hash": prev_hash},
+                           sort_keys=True, ensure_ascii=False)
+        empreinte = hashlib.sha256(corps.encode("utf-8")).hexdigest()
+        conn.execute(
+            """INSERT INTO audit_log (actor, event, authority_level, decision, payload, prev_hash, hash)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+            (acteur, evenement, niveau, decision, Json(payload), prev_hash, empreinte),
+        )
+        conn.commit()
