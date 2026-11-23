@@ -20,3 +20,4 @@ volumes/
 
 # Traces d'exécution de l'agent
 traces/
+*.log

@@ -202,6 +202,9 @@ def ajouter_risque(titre: str, description: str, categorie: str, processus: str,
     """Ajoute un risque au registre. Cotations de 1 à 5. Catégories : OP-FI, OP-FE, OP-RH, OP-CLI,
     OP-DOM, OP-SYS, OP-EXE, TIC-CYB, TIC-TIERS, TIC-DISP, TIC-DATA, CO-BC, CO-SAN, CO-JUR, CO-REP.
     Unités : RET, PRI, TRE, OPS, DSI, RH, RSK, CMP."""
+    refus = controler_autorite("ajouter_risque", "N2")
+    if refus:
+        return refus
     with _VERROU_IDENTIFIANTS:
         new_id = db.next_id("risks", "R")
         db.execute(
@@ -219,6 +222,9 @@ def ajouter_risque(titre: str, description: str, categorie: str, processus: str,
 @tool
 def lier_risque_controle(risk_id: str, control_id: str) -> dict:
     """Relie un contrôle existant à un risque du registre."""
+    refus = controler_autorite("lier_risque_controle", "N2")
+    if refus:
+        return refus
     n = db.execute(
         "INSERT INTO risk_controls (risk_id, control_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
         (risk_id, control_id),
@@ -230,6 +236,9 @@ def lier_risque_controle(risk_id: str, control_id: str) -> dict:
 @tool
 def ajouter_obligation(reglementation: str, article: str, resume: str, unite: str) -> dict:
     """Ajoute une obligation réglementaire extraite d'un texte (ex. reglementation=REG-DORA, article='Art. 28')."""
+    refus = controler_autorite("ajouter_obligation", "N2")
+    if refus:
+        return refus
     with _VERROU_IDENTIFIANTS:
         new_id = db.next_id("obligations", "O")
         db.execute(
@@ -243,6 +252,9 @@ def ajouter_obligation(reglementation: str, article: str, resume: str, unite: st
 @tool
 def lier_obligation_controle(obligation_id: str, control_id: str) -> dict:
     """Relie une obligation réglementaire à un contrôle qui la couvre."""
+    refus = controler_autorite("lier_obligation_controle", "N2")
+    if refus:
+        return refus
     n = db.execute(
         "INSERT INTO obligation_controls (obligation_id, control_id) VALUES (%s, %s) ON CONFLICT DO NOTHING",
         (obligation_id, control_id),
@@ -254,6 +266,9 @@ def lier_obligation_controle(obligation_id: str, control_id: str) -> dict:
 @tool
 def modifier_efficacite_controle(control_id: str, efficacite: str) -> dict:
     """Modifie l'efficacité d'un contrôle : efficace, partiel, inefficace ou non_teste."""
+    refus = controler_autorite("modifier_efficacite_controle", "N2")
+    if refus:
+        return refus
     n = db.execute("UPDATE controls SET effectiveness = %s WHERE id = %s", (efficacite, control_id))
     db.journaliser(acteur_courant(), "modifier_efficacite_controle", "N2", "autorise",
                    {"control_id": control_id, "efficacite": efficacite})
@@ -266,6 +281,9 @@ def modifier_efficacite_controle(control_id: str, efficacite: str) -> dict:
 @tool
 def cloturer_incident(incident_id: str) -> dict:
     """Clôture un incident."""
+    refus = controler_autorite("cloturer_incident", "N3")
+    if refus:
+        return refus
     n = db.execute("UPDATE incidents SET status = 'clos' WHERE id = %s", (incident_id,))
     db.journaliser(acteur_courant(), "cloturer_incident", "N3", "autorise",
                    {"incident_id": incident_id, "lignes": n})
@@ -288,6 +306,29 @@ def definir_acteur(user_id):
 def acteur_courant():
     """Renvoie l'utilisateur courant (l'acteur à inscrire au journal)."""
     return _ACTEUR
+
+
+# Rôles habilités à demander une écriture au registre (2e ligne)
+ROLES_ECRITURE = {"risk_manager", "compliance_officer"}
+
+
+def controler_autorite(action, niveau):
+    """N3 interdit à l'agent ; N2 réservé aux rôles habilités. Trace tout refus."""
+    acteur = acteur_courant()
+    if niveau == "N3":
+        db.journaliser(acteur, action, niveau, "refuse",
+                       {"motif": "action N3 interdite a l'agent"})
+        return {"statut": "refusé",
+                "motif": "Action interdite (N3) : décision humaine habilitée requise."}
+    if niveau == "N2":
+        role = db.role_utilisateur(acteur)
+        if role not in ROLES_ECRITURE:
+            db.journaliser(acteur, action, niveau, "refuse",
+                           {"motif": f"role {role} non habilite"})
+            return {"statut": "refusé",
+                    "motif": f"Votre rôle ({role}) n'autorise pas cette écriture au registre."}
+    return None
+
 
 # Niveau d'autorité CIBLE (appliqué par la couche OPA en semaine 2, ignoré en J3)
 AUTHORITY_LEVEL = {

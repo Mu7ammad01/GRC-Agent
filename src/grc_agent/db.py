@@ -61,6 +61,14 @@ def next_id(table: str, prefix: str) -> str:
     )
     last = int(rows[0]["id"].split("-")[1]) if rows else 0
     return f"{prefix}-{last + 1:03d}"
+
+
+def role_utilisateur(user_id):
+    """Renvoie le rôle de l'utilisateur (risk_manager, compliance_officer, metier…) ou None."""
+    rows = fetch_all("SELECT role FROM users WHERE id = %s", (user_id,))
+    return rows[0]["role"] if rows else None
+
+
 _VERROU_JOURNAL = threading.Lock()
 
 
