@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GRC·Agent — console risques & conformité</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#e9ecf1; --surface:#ffffff; --ink:#15263b; --ink2:#43546b; --muted:#7d8798;
+    --line:#dde2ea; --navy:#16304d; --navy-d:#0f2338; --gold:#b9872b; --gold-soft:#f1e6cc;
+    --parchment:#faf7ef; --parch-line:#ece3cf;
+    --ok:#2f7d4f; --ok-bg:#e7f1ea; --no:#b03838; --no-bg:#f6e7e6;
+    --n0:#5e6b7e; --n0-bg:#eceff4; --n2:#976414; --n2-bg:#f5ead4; --n3:#b03838; --n3-bg:#f6e7e6;
+    --sans:"IBM Plex Sans",system-ui,sans-serif; --serif:"IBM Plex Serif",Georgia,serif; --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;font-family:var(--sans);color:var(--ink);background:var(--paper);
+       display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+
+  /* Barre de marque */
+  .topbar{display:flex;align-items:center;gap:14px;padding:0 22px;height:62px;
+          background:linear-gradient(180deg,var(--navy),var(--navy-d));color:#fff;flex:none;
+          box-shadow:0 1px 0 #00000022}
+  .brand{display:flex;align-items:center;gap:11px}
+  .seal{width:30px;height:30px;border-radius:50%;background:var(--navy-d);border:1.5px solid var(--gold);
+        color:var(--gold);font-family:var(--serif);font-weight:600;font-size:16px;display:grid;place-items:center;
+        box-shadow:inset 0 0 0 2px #ffffff10}
+  .wordmark{font-family:var(--serif);font-weight:600;font-size:19px;letter-spacing:.3px}
+  .wordmark b{color:var(--gold);font-weight:600}
+  .tagline{font-size:12px;color:#ffffffb0;border-left:1px solid #ffffff2e;padding-left:14px;margin-left:4px}
+  .identity{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .identity .lbl{font-size:12px;color:#ffffffb0}
+  .identity select{appearance:none;font:inherit;font-size:13px;font-weight:500;color:var(--ink);background:#fff;
+        border:0;border-radius:9px;padding:8px 30px 8px 12px;cursor:pointer;
+        background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2316304d' stroke-width='2'><path d='M2 4l4 4 4-4'/></svg>");
+        background-repeat:no-repeat;background-position:right 11px center}
+
+  /* Espace de travail */
+  .workspace{flex:1;min-height:0;width:100%;max-width:1240px;margin:0 auto;padding:20px 20px 22px;
+             display:grid;grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr);gap:20px}
+  @media(max-width:880px){.workspace{grid-template-columns:1fr;overflow-y:auto}}
+
+  /* Conversation */
+  .conversation{display:flex;flex-direction:column;min-height:0;background:var(--surface);
+                border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px -22px #16304d80}
+  .stream{flex:1;min-height:0;overflow-y:auto;padding:26px 26px 10px;display:flex;flex-direction:column;gap:18px}
+
+  /* Accroche (état vide) */
+  .hero{margin:auto;max-width:430px;text-align:center;padding:14px 0 26px}
+  .hero h2{font-family:var(--serif);font-weight:600;font-size:26px;line-height:1.2;margin:0 0 12px;color:var(--ink)}
+  .hero p{color:var(--ink2);font-size:14.5px;line-height:1.6;margin:0 0 22px}
+  .examples{display:flex;flex-direction:column;gap:9px}
+  .chip{font:inherit;font-size:13.5px;color:var(--ink);background:#fff;border:1px solid var(--line);
+        border-radius:11px;padding:11px 14px;text-align:left;cursor:pointer;transition:border-color .15s,background .15s}
+  .chip:hover{border-color:var(--gold);background:#fffdf8}
+  .chip b{color:var(--gold);font-weight:600;margin-right:7px;font-family:var(--mono);font-size:12px}
+
+  /* Tours de conversation */
+  .turn{display:flex;gap:12px;max-width:94%}
+  .turn.user{align-self:flex-end;max-width:82%}
+  .turn .seal{flex:none;margin-top:2px}
+  .bubble{font-size:14.5px;line-height:1.6;border-radius:14px;padding:13px 16px}
+  .turn.user .bubble{background:var(--navy);color:#fff;border-bottom-right-radius:5px;white-space:pre-wrap}
+  .turn.bot .bubble{background:#f6f8fb;border:1px solid var(--line);border-bottom-left-radius:5px;color:var(--ink)}
+  .turn.err .bubble{background:var(--no-bg);color:var(--no);border:1px solid #e9cdcc}
+  .bubble p{margin:8px 0} .bubble p:first-child{margin-top:0} .bubble p:last-child{margin-bottom:0}
+  .bubble strong{color:var(--navy);font-weight:600}
+  .bubble h3,.bubble h4,.bubble h5{font-family:var(--serif);color:var(--navy);margin:14px 0 6px;line-height:1.3}
+  .bubble h3{font-size:17px} .bubble h4{font-size:15px} .bubble h5{font-size:14px}
+  .bubble ul{margin:8px 0 8px 18px;padding:0} .bubble li{margin:4px 0}
+  .bubble code{font-family:var(--mono);font-size:12.5px;background:#e7ebf1;padding:1px 6px;border-radius:5px}
+  .bubble table{border-collapse:separate;border-spacing:0;width:100%;margin:12px 0;font-size:13px;
+                border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .bubble thead th{background:var(--navy);color:#fff;font-weight:600;font-size:12.5px;text-align:left;padding:9px 11px}
+  .bubble tbody td{padding:9px 11px;border-top:1px solid var(--line);vertical-align:top}
+  .bubble tbody tr:nth-child(even) td{background:#f7f9fc}
+  .bubble tbody td:first-child{font-family:var(--mono);font-size:12.5px;color:var(--navy);font-weight:500}
+
+  .thinking{display:flex;gap:11px;align-items:center;color:var(--muted);font-size:13.5px}
+  .thinking .seal{opacity:.85}
+  .dots{display:inline-flex;gap:5px}
+  .dots i{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 1s infinite alternate}
+  .dots i:nth-child(2){animation-delay:.18s}.dots i:nth-child(3){animation-delay:.36s}
+  @keyframes pulse{from{opacity:.25;transform:translateY(0)}to{opacity:1;transform:translateY(-2px)}}
+
+  /* Composeur */
+  .composer{flex:none;padding:14px;border-top:1px solid var(--line);display:flex;gap:11px;align-items:flex-end}
+  .composer textarea{flex:1;resize:none;height:48px;max-height:140px;padding:13px 14px;font:inherit;font-size:14px;
+        color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:12px;outline:none}
+  .composer textarea:focus{border-color:var(--navy);box-shadow:0 0 0 3px #16304d1f}
+  .send{flex:none;height:48px;padding:0 20px;border:0;border-radius:12px;background:var(--navy);color:#fff;
+        font:inherit;font-weight:600;cursor:pointer;transition:background .15s}
+  .send:hover{background:var(--navy-d)} .send:disabled{opacity:.45;cursor:not-allowed}
+
+  /* Registre (inspector) */
+  .registre{display:flex;flex-direction:column;min-height:0;background:var(--parchment);
+            border:1px solid var(--parch-line);border-left:3px solid var(--gold);border-radius:14px;overflow:hidden}
+  .registre .head{padding:17px 18px 12px;border-bottom:1px solid var(--parch-line)}
+  .registre .head h2{font-family:var(--serif);font-weight:600;font-size:16.5px;margin:0;color:var(--ink)}
+  .registre .head p{margin:4px 0 0;font-size:12px;color:var(--muted);line-height:1.5}
+  .registre .body{flex:1;min-height:0;overflow-y:auto;padding:16px 18px}
+  .section{margin-bottom:20px}
+  .section > h3{font-size:11.5px;font-weight:700;letter-spacing:.4px;color:var(--gold);margin:0 0 9px;
+                text-transform:uppercase;font-family:var(--mono)}
+  .empty{color:var(--muted);font-size:13px;line-height:1.55}
+  .toolrow{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px dashed var(--parch-line);font-size:13px}
+  .toolrow:last-child{border-bottom:0}
+  .toolrow .name{font-family:var(--mono);font-size:12.5px;color:var(--ink2)}
+  .nb{font-family:var(--mono);font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:5px}
+  .nb.n0{background:var(--n0-bg);color:var(--n0)} .nb.n2{background:var(--n2-bg);color:var(--n2)} .nb.n3{background:var(--n3-bg);color:var(--n3)}
+  .ledger{position:relative}
+  .entry{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--parch-line)}
+  .entry:last-child{border-bottom:0}
+  .tick{width:9px;height:9px;border-radius:50%;flex:none}
+  .tick.ok{background:var(--ok)} .tick.no{background:var(--no)}
+  .entry .who{font-family:var(--mono);font-size:12px;color:var(--ink2);line-height:1.35}
+  .entry .who b{color:var(--ink);font-weight:600}
+  .verdict{margin-left:auto;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .verdict.ok{background:var(--ok-bg);color:var(--ok)} .verdict.no{background:var(--no-bg);color:var(--no)}
+  .meta{margin-top:4px;padding-top:12px;border-top:1px solid var(--parch-line);font-size:12px;color:var(--muted);
+        font-family:var(--mono)}
+
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#c7cedb;border-radius:20px;border:3px solid transparent;background-clip:content-box}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <div class="seal">G</div>
+    <div class="wordmark">GRC<b>·</b>Agent</div>
+    <div class="tagline">Console risques &amp; conformité — Banque Exemple Luxembourg · données fictives</div>
+  </div>
+  <div class="identity">
+    <span class="lbl">Vous agissez comme</span>
+    <select id="user" aria-label="Utilisateur"></select>
+  </div>
+</div>
+
+<div class="workspace">
+  <section class="conversation">
+    <div class="stream" id="stream">
+      <div class="hero" id="hero">
+        <div class="seal" style="margin:0 auto 16px">G</div>
+        <h2>Interrogez le registre des risques.</h2>
+        <p>Réglementation, incidents, contrôles, obligations. Chaque action de l'agent est consignée dans le registre, à droite — qui l'a demandée, sous quelle autorité, et si elle a été accordée.</p>
+        <div class="examples" id="examples">
+          <button class="chip"><b>N0</b>Quels risques TIC sont hors appétit ?</button>
+          <button class="chip"><b>N0</b>Quelles obligations DORA n'ont aucun contrôle efficace ?</button>
+          <button class="chip"><b>N3</b>Clôture l'incident I-017.</button>
+        </div>
+      </div>
+    </div>
+    <div class="composer">
+      <textarea id="q" rows="1" placeholder="Posez votre question…"></textarea>
+      <button class="send" id="send">Envoyer</button>
+    </div>
+  </section>
+
+  <aside class="registre">
+    <div class="head">
+      <h2>Registre de l'échange</h2>
+      <p>Ce que l'agent a consulté et fait, et sous quelle autorité.</p>
+    </div>
+    <div class="body">
+      <div class="empty" id="reg-empty">En attente — le registre se remplit après votre première question.</div>
+      <div id="reg" style="display:none">
+        <div class="section">
+          <h3>Sources &amp; outils</h3>
+          <div id="tools"></div>
+        </div>
+        <div class="section">
+          <h3>Journal d'audit</h3>
+          <div class="ledger" id="audit"></div>
+        </div>
+        <div class="meta" id="meta"></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const inline = s => esc(s)
+  .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+  .replace(/(^|[^*])\*([^*]+)\*/g,'$1<em>$2</em>')
+  .replace(/`([^`]+)`/g,'<code>$1</code>');
+
+function renderMarkdown(src){
+  const lines=src.replace(/\r/g,'').split('\n'); let html='',i=0;
+  const cells=l=>l.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+  while(i<lines.length){
+    const line=lines[i];
+    if(/^\s*\|/.test(line)&&i+1<lines.length&&/^[\s|:\-]+$/.test(lines[i+1])&&lines[i+1].includes('-')){
+      const head=cells(line);i+=2;const rows=[];
+      while(i<lines.length&&/^\s*\|/.test(lines[i])){rows.push(cells(lines[i]));i++;}
+      html+='<table><thead><tr>'+head.map(h=>`<th>${inline(h)}</th>`).join('')+'</tr></thead><tbody>'+
+            rows.map(r=>'<tr>'+r.map(c=>`<td>${inline(c)}</td>`).join('')+'</tr>').join('')+'</tbody></table>';continue;}
+    const h=line.match(/^(#{1,5})\s+(.*)$/);
+    if(h){const lvl=Math.min(5,h[1].length+2);html+=`<h${lvl}>${inline(h[2])}</h${lvl}>`;i++;continue;}
+    if(/^\s*[-*]\s+/.test(line)){html+='<ul>';
+      while(i<lines.length&&/^\s*[-*]\s+/.test(lines[i])){html+=`<li>${inline(lines[i].replace(/^\s*[-*]\s+/,''))}</li>`;i++;}
+      html+='</ul>';continue;}
+    if(line.trim()===''){i++;continue;}
+    const para=[line];i++;
+    while(i<lines.length&&lines[i].trim()!==''&&!/^\s*\|/.test(lines[i])&&!/^#{1,5}\s/.test(lines[i])&&!/^\s*[-*]\s+/.test(lines[i])){para.push(lines[i]);i++;}
+    html+=`<p>${inline(para.join(' '))}</p>`;
+  }
+  return html;
+}
+
+const ROLES={metier:'métier · 1re ligne',risk_manager:'risk manager',compliance_officer:'conformité',cro:'CRO',cco:'CCO',auditeur:'auditeur'};
+async function loadUsers(){
+  const us=await (await fetch('/utilisateurs')).json(); const sel=$('#user');
+  us.forEach(u=>{const o=document.createElement('option');o.value=u.id;
+    o.textContent=`${u.full_name} — ${ROLES[u.role]||u.role}`; if(u.id==='u.dupont')o.selected=true; sel.appendChild(o);});
+}
+loadUsers();
+
+function seal(){const d=document.createElement('div');d.className='seal';d.textContent='G';return d;}
+function addTurn(text,cls){
+  const hero=$('#hero'); if(hero)hero.remove();
+  const t=document.createElement('div');t.className='turn '+cls;
+  const b=document.createElement('div');b.className='bubble';
+  b.innerHTML = cls==='bot'?renderMarkdown(text):esc(text);
+  if(cls==='bot'){t.appendChild(seal());}
+  t.appendChild(b); $('#stream').appendChild(t); $('#stream').scrollTop=1e9; return t;
+}
+
+function renderRegistre(d){
+  $('#reg-empty').style.display='none'; $('#reg').style.display='block';
+  const tl=$('#tools'); tl.innerHTML = d.outils.length?'':'<div class="empty">Réponse directe — aucun outil appelé.</div>';
+  d.outils.forEach(t=>tl.insertAdjacentHTML('beforeend',
+    `<div class="toolrow"><span class="nb ${t.niveau.toLowerCase()}">${t.niveau}</span><span class="name">${esc(t.outil)}</span></div>`));
+  const al=$('#audit'); al.innerHTML = d.audit.length?'':'<div class="empty">Aucune action sensible — lecture seule.</div>';
+  d.audit.forEach(a=>{const ok=a.decision==='autorise';
+    al.insertAdjacentHTML('beforeend',
+      `<div class="entry"><span class="tick ${ok?'ok':'no'}"></span>
+        <span class="who"><b>${esc(a.actor)}</b><br>${esc(a.event)} · ${a.authority_level}</span>
+        <span class="verdict ${ok?'ok':'no'}">${ok?'accordé':'refusé'}</span></div>`);});
+  $('#meta').textContent=`${d.duree_s}s · ${d.ecritures} écriture(s)`+(d.erreur?` · erreur : ${d.erreur}`:'');
+}
+
+async function send(){
+  const q=$('#q').value.trim(); if(!q)return;
+  $('#send').disabled=true; $('#q').value=''; $('#q').style.height='48px';
+  addTurn(q,'user');
+  const th=document.createElement('div'); th.className='turn bot'; const ind=document.createElement('div');
+  ind.className='thinking'; ind.innerHTML='L’agent consulte les sources<span class="dots"><i></i><i></i><i></i></span>';
+  th.appendChild(seal()); th.appendChild(ind); $('#stream').appendChild(th); $('#stream').scrollTop=1e9;
+  try{
+    const d=await (await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question:q,utilisateur:$('#user').value})})).json();
+    th.remove(); addTurn(d.reponse||'(réponse vide)','bot'); renderRegistre(d);
+  }catch(e){ th.remove(); addTurn('Connexion au serveur impossible. Vérifiez que le service tourne, puis réessayez.','err'); }
+  $('#send').disabled=false; $('#q').focus();
+}
+$('#send').onclick=send;
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}});
+$('#q').addEventListener('input',e=>{e.target.style.height='48px';e.target.style.height=Math.min(140,e.target.scrollHeight)+'px';});
+$('#examples').addEventListener('click',e=>{const b=e.target.closest('.chip'); if(!b)return;
+  $('#q').value=b.textContent.replace(/^N[0-3]/,'').trim(); $('#q').focus();});
+</script>
+</body>
+</html>
