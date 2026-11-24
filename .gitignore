@@ -25,3 +25,6 @@ chroma_index/
 
 neon.txt
 *.patch
+
+neon.txt
+*.patch
