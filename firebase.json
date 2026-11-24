@@ -1,0 +1,6 @@
+{
+  "hosting": {
+    "site": "grc-agent-bel",
+    "rewrites": [{ "source": "**", "run": { "serviceId": "grc-agent", "region": "europe-west1" } }]
+  }
+}

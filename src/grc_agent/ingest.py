@@ -24,6 +24,28 @@ def ollama_embedding():
     return OllamaEmbeddingFunction(url=settings.ollama_url, model_name=settings.embed_model, timeout=300)
 
 
+def vertex_embedding():
+    """Fonction d'embedding Chroma appuyée sur Vertex AI (ni Ollama ni serveur local)."""
+    from google import genai
+
+    client = genai.Client(vertexai=True, project=settings.google_project, location=settings.google_location)
+
+    class _VertexEmbedding:
+        def name(self):
+            return "vertex"
+
+        def __call__(self, input):
+            reponse = client.models.embed_content(model=settings.vertex_embed_model, contents=list(input))
+            return [e.values for e in reponse.embeddings]
+
+    return _VertexEmbedding()
+
+
+def choisir_embedding():
+    """Choisit la fonction d'embedding selon EMBED_PROVIDER (ollama par défaut)."""
+    return vertex_embedding() if settings.embed_provider == "vertex" else ollama_embedding()
+
+
 def collect_chunks(root: Path = ROOT) -> tuple[list[Chunk], list[str]]:
     """Découpe tous les documents disponibles. Retourne (passages, documents manquants)."""
     sources = yaml.safe_load((root / "corpus" / "sources.yaml").read_text(encoding="utf-8"))
@@ -62,7 +84,11 @@ def collect_chunks(root: Path = ROOT) -> tuple[list[Chunk], list[str]]:
 def get_collection(client=None, embedding=None, reset: bool = False):
     import chromadb
 
-    client = client or chromadb.HttpClient(host=settings.chroma_host, port=settings.chroma_port)
+    if client is None:
+        if settings.chroma_mode == "persistent":
+            client = chromadb.PersistentClient(path=settings.chroma_path)
+        else:
+            client = chromadb.HttpClient(host=settings.chroma_host, port=settings.chroma_port)
     if reset:
         try:
             client.delete_collection(settings.chroma_collection)
@@ -70,7 +96,7 @@ def get_collection(client=None, embedding=None, reset: bool = False):
             pass
     return client.get_or_create_collection(
         settings.chroma_collection,
-        embedding_function=embedding or ollama_embedding(),
+        embedding_function=embedding or choisir_embedding(),
         metadata={"hnsw:space": "cosine"},
     )
 

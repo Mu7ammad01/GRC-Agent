@@ -31,6 +31,20 @@ MODELE = os.getenv("LLM_MODEL_WEB", "gemini-3.8-flash")
 app = FastAPI(title="GRC-Agent · interface web")
 _AGENT = None
 
+# Démo publique : borne le nombre de requêtes/heure pour limiter les coûts Vertex.
+import time as _temps  # noqa: E402
+_HITS: list[float] = []
+_LIMITE_HEURE = int(os.getenv("DEMO_LIMITE_HEURE", "80"))
+
+
+def _quota_ok() -> bool:
+    maintenant = _temps.time()
+    _HITS[:] = [t for t in _HITS if maintenant - t < 3600]
+    if len(_HITS) >= _LIMITE_HEURE:
+        return False
+    _HITS.append(maintenant)
+    return True
+
 
 def _agent():
     """Construit l'agent une seule fois (collection RAG + modèle), puis le réutilise."""
@@ -68,6 +82,10 @@ def sante():
 @app.post("/ask")
 def ask(q: Question):
     """Pose la question à l'agent et renvoie la réponse + la gouvernance de l'échange."""
+    if not _quota_ok():
+        return {"reponse": "Démonstration en pause (limite horaire atteinte pour maîtriser les coûts). "
+                           "Réessayez dans un moment, ou lancez le projet en local depuis le dépôt GitHub.",
+                "outils": [], "audit": [], "ecritures": 0, "duree_s": 0, "erreur": None}
     avant = _audit_max()
     res = agent_mod.run(q.question, user_id=q.utilisateur, agent=_agent(),
                         provider=FOURNISSEUR, model_name=MODELE)

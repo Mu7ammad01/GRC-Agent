@@ -1,0 +1,15 @@
+.git
+.gitignore
+.venv
+__pycache__
+traces
+corpus/raw
+data
+db
+docs
+tests
+scenarios
+*.patch
+*.log
+resultats_j4.csv
+.chroma

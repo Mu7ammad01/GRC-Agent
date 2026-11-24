@@ -7,6 +7,8 @@ L'intérêt du projet n'est pas « un assistant de plus », mais la **sécurité
 > Projet de fin d'études — Mastère Spécialisé Cybersécurité & Smart Systems, CY Tech.
 > Toutes les données du dépôt (banque, utilisateurs, incidents) sont **fictives**.
 
+**▶ Démo en ligne : [grc-agent-bel.web.app](https://grc-agent-bel.web.app)** — console interrogeable (la première requête réveille le service, ~30 s).
+
 ---
 
 ## L'interface
@@ -123,7 +125,7 @@ docs/            cadrage, rapport avant/après, schémas
 | Interface web (chat + registre de gouvernance) | ✅ fait |
 | Validation nominative « quatre yeux » (`pending_actions`) | 🔜 étape suivante |
 | Défense en profondeur (validation Pydantic, filtrage RAG par rôle) | 🔜 |
-| Déploiement cloud (Cloud Run + Postgres managé + embeddings Vertex) | 🔜 |
+| Déploiement cloud (Cloud Run + Postgres managé + embeddings Vertex) | ✅ fait |
 
 ## Avertissements
 

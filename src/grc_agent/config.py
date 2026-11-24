@@ -17,6 +17,14 @@ class Settings:
     llm_model: str = os.getenv("LLM_MODEL", "qwen2.5:7b")
     embed_model: str = os.getenv("EMBED_MODEL", "nomic-embed-text")
     ollama_num_ctx: int = int(os.getenv("OLLAMA_NUM_CTX", "8192"))
+    # Embeddings et magasin vectoriel : local (Ollama + Chroma serveur) par défaut,
+    # cloud (Vertex + Chroma persistant « cuit » dans l'image) via variables d'env.
+    embed_provider: str = os.getenv("EMBED_PROVIDER", "ollama")      # ollama | vertex
+    chroma_mode: str = os.getenv("CHROMA_MODE", "http")              # http | persistent
+    chroma_path: str = os.getenv("CHROMA_PATH", str(ROOT / ".chroma"))
+    vertex_embed_model: str = os.getenv("VERTEX_EMBED_MODEL", "gemini-embedding-001")
+    google_project: str = os.getenv("GOOGLE_CLOUD_PROJECT", "")
+    google_location: str = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
 
 
 settings = Settings()
