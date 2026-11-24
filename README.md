@@ -1,149 +1,131 @@
-# GRC-Agent
+# GRC-Agent — un agent IA de conformité, et comment le sécuriser
 
-Agent IA d'assistance à la **gouvernance, gestion des risques et conformité (GRC)** pour une banque luxembourgeoise fictive, la *Banque Exemple Luxembourg (BEL)*.
+Agent IA d'assistance à la **gouvernance, gestion des risques et conformité (GRC)** d'une banque luxembourgeoise fictive, la *Banque Exemple Luxembourg (BEL)*, supervisée par la CSSF.
 
-L'agent aide la 1re et la 2e ligne de défense à identifier, évaluer, relier et suivre les risques, obligations réglementaires et contrôles. **Il ne décide jamais à la place d'un humain habilité** : chaque action passe par une couche d'autorité explicite (niveaux N0 à N3) et toute modification du registre exige une validation humaine nominative.
+L'intérêt du projet n'est pas « un assistant de plus », mais la **sécurité de l'agent lui-même** : quand une IA peut *agir* (écrire au registre des risques, clôturer un incident), qu'est-ce qui garantit — indépendamment de la bonne volonté du modèle — qu'elle reste dans son mandat, et que chaque action est tracée ? Démarche : **mesurer les failles, les durcir, le prouver.**
 
 > Projet de fin d'études — Mastère Spécialisé Cybersécurité & Smart Systems, CY Tech.
-> Toutes les données du dépôt sont **fictives**. Aucune donnée bancaire réelle n'est utilisée.
+> Toutes les données du dépôt (banque, utilisateurs, incidents) sont **fictives**.
 
-## Cas d'usage (MVP)
+---
 
-| # | Cas d'usage | Niveau max. |
+## L'interface
+
+Une console web locale : on pose une question en langage naturel, et un **registre de gouvernance** montre en direct ce que l'agent a consulté, les actions sensibles, et sous quelle autorité elles ont été **accordées ou refusées**.
+
+![Console GRC-Agent](docs/img/console.png)
+
+On s'identifie par un rôle (risk manager, conformité, métier…) : c'est ce rôle qui détermine ce que l'agent a le droit de faire — et chaque refus est inscrit au journal d'audit.
+
+---
+
+## Démarche sécurité : mesurer → durcir → prouver
+
+### 1. Modèle de menace
+
+L'agent manipule 14 outils classés par **niveau d'autorité** : **N0** (lecture), **N2** (écriture au registre), **N3** (interdit à l'agent — ex. clôturer un incident). Une version **volontairement non protégée** a été soumise à **8 menaces** du référentiel **OWASP LLM Top 10** (autonomie excessive, injection indirecte, divulgation, information erronée, empoisonnement du RAG, sortie non sûre, fuite du prompt, répudiation).
+
+### 2. Résultat de la mesure
+
+| Résultat sur la version non protégée | Menaces | Lecture |
 |---|---|---|
-| UC1 | Assistant RCSA : proposer risques, contrôles et cotations à partir d'un processus | N2 |
-| UC2 | Cartographie réglementaire : relier obligations (DORA, CSSF) et contrôles | N2 |
-| UC3 | Analyse d'écarts d'une politique interne | N1 |
-| UC4 | Suivi des incidents et KRI, alertes vs appétit pour le risque | N2 |
-| UC5 | Projet de rapport trimestriel risques et conformité | N1 |
+| **Refusées par le modèle** | M1–M7 (7/8) | Un modèle récent (Gemini) refuse spontanément les attaques de prompt — mais rien dans le code ne l'y oblige : protection **souple**, ni garantie, ni auditable. |
+| **Réussie** | **M8 — Répudiation** | L'agent écrit dans le registre **sans aucune trace** de qui a autorisé l'action. Faille **d'architecture** qu'aucun comportement du modèle ne corrige. |
 
-**Niveaux d'autorité** : N0 lire · N1 proposer (brouillon) · N2 écrire après validation humaine · N3 interdit (accepter un risque, modifier l'appétit, clôturer un incident, notifier la CSSF, supprimer une trace).
+![Mesure des menaces](docs/img/mesure.png)
+
+### 3. Durcissements réalisés (et prouvés)
+
+| Correctif | Apport | Preuve |
+|---|---|---|
+| **Journal d'audit (M8)** | Chaque action sensible tracée (acteur, horodatage, niveau, décision), **chaînée par empreinte SHA-256** et en **ajout seul** | `audit_log` passe de 0 à *n* ; `UPDATE` rejeté par la base ; chaîne vérifiée intègre |
+| **Couche d'autorité (M1)** | **N3 bloqué par le code** ; écriture N2 **réservée aux rôles habilités** ; tout refus journalisé | Test en appel direct (hors modèle) : clôture N3 → refusée, écriture d'un métier → refusée, écriture d'un risk manager → accordée |
+
+**Avant / après :**
+
+| Menace | Avant (non protégé) | Après |
+|---|---|---|
+| M8 — Répudiation | 3/3 réussie (`audit_log` = 0) | **fermée** : tracée, chaînée, inviolable |
+| M1 — Autonomie excessive | refus du modèle, non garanti | **garantie par le code** : N3 bloqué, N2 hors-rôle refusé, refus tracés |
+
+Les menaces M2–M6, déjà neutralisées par le modèle lors de la mesure, relèvent de la **défense en profondeur** (feuille de route).
+
+---
 
 ## Architecture
 
 ```
-Utilisateurs (1re/2e ligne, CRO, CCO) ─► Interface (Streamlit)
-        ─► Garde-fous d'entrée/sortie (Presidio, Llama Guard)
-        ─► Orchestrateur (LangGraph + LLM local via Ollama)
-        ─► Couche d'autorité (Open Policy Agent) ──► Validation humaine (N2)
-        ─► Outils GRC : RAG réglementaire (Chroma) · Base GRC (PostgreSQL)
-                        Incidents & KRI · Générateur de rapports
-Tout est tracé dans un journal d'audit signé (Langfuse, alertes Wazuh).
+Utilisateur (rôle) ─► Interface web (FastAPI + page de chat)
+   └─► Agent (LangChain create_agent / LangGraph)
+         ├─ Couche d'autorité : N3 bloqué, N2 réservé aux rôles  ──► Journal d'audit chaîné
+         └─ Outils GRC :
+              ├─ RAG réglementaire (Chroma) — DORA, AI Act, CSSF, LBC/FT
+              └─ Base GRC (PostgreSQL) — risques, contrôles, obligations, incidents
+   Modèle : Gemini via Google Cloud Vertex AI (ADC, sans clé).
+   Chaque échange est tracé (outils appelés, écritures, décisions d'autorité).
 ```
 
-Détails : [`docs/J1_Cadrage_Agent_GRC_Banque.pdf`](docs/J1_Cadrage_Agent_GRC_Banque.pdf).
+## Pile technique
 
-## Arborescence
+Python · LangChain / LangGraph · Google Cloud Vertex AI (Gemini) · PostgreSQL · Chroma (RAG, embeddings locaux) · FastAPI · Docker · pydantic.
 
-```
-grc-agent/
-├── docker-compose.yml     # PostgreSQL, Chroma, Ollama
-├── Makefile               # commandes courantes
-├── db/
-│   ├── 01_schema.sql      # schéma de la base GRC
-│   └── 02_seed.sql        # données fictives (généré)
-├── data/
-│   ├── seed/              # mêmes données en CSV (généré)
-│   └── policies/          # politiques internes fictives de la BEL
-├── corpus/
-│   ├── sources.yaml       # textes réglementaires à indexer
-│   └── raw/               # textes téléchargés (non versionné)
-├── scripts/
-│   ├── generate_seed.py   # génère db/02_seed.sql et data/seed/*.csv
-│   └── download_corpus.py # télécharge les textes publics
-├── src/grc_agent/
-│   ├── config.py
-│   ├── chunking.py        # découpage des documents
-│   ├── ingest.py          # indexation dans Chroma (embeddings Ollama)
-│   ├── db.py              # accès à la base GRC
-│   ├── tools.py           # 14 outils GRC et leur niveau d'autorité cible
-│   ├── agent.py           # agent (LangChain create_agent sur LangGraph), choix du LLM, traces
-│   └── cli.py             # interface en ligne de commande
-├── scenarios/             # scénarios de démonstration et, en J4, d'attaque
-├── policies/              # règles OPA de la couche d'autorité (semaine 2)
-├── tests/
-└── docs/
-```
+---
 
-## Démarrage rapide
+## Démarrage rapide (local)
 
-### Dans GitHub Codespaces (recommandé)
-
-Ouvrir le dépôt dans un Codespace **4 cœurs**. Le fichier `.devcontainer/devcontainer.json` fournit un environnement léger (Python 3.12 + Docker) : à la création, les dépendances Python sont installées ; à chaque démarrage, `scripts/start_services.sh` lance PostgreSQL, Chroma et Ollama et télécharge les modèles manquants (environ 5 Go la première fois). Il reste ensuite à lancer :
+Prérequis : Docker, Python 3.11+, et — pour Gemini — des identifiants Google Cloud (ADC) renseignés dans `.env`.
 
 ```bash
-make ingest        # une seule fois, ou après suppression du volume Chroma
-make test
+cp .env.example .env            # renseigner le projet Vertex AI + LLM_PROVIDER=google_genai
+bash scripts/start_services.sh  # PostgreSQL, Chroma, Ollama (embeddings)
+source .venv/Scripts/activate && pip install -r requirements.txt -r requirements-cloud.txt
+PYTHONPATH=src python -m grc_agent.ingest --reset   # indexe le corpus réglementaire
+
+# Interface web
+pip install fastapi uvicorn
+PYTHONPATH=src uvicorn web.app:app --port 8010 --reload    # → http://127.0.0.1:8010
+
+# Ou en ligne de commande
+PYTHONPATH=src python -m grc_agent.cli --user u.dupont "Quels risques TIC sont hors appétit ?"
 ```
 
-### En local
-
-Prérequis : Docker et Docker Compose, Python 3.11+, environ 8 Go de RAM libre pour le modèle local.
+### Mesurer les menaces et durcir
 
 ```bash
-cp .env.example .env
-make up            # lance PostgreSQL (schéma + données), Chroma et Ollama
-make models        # télécharge le LLM et le modèle d'embeddings dans Ollama
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-make corpus        # télécharge les textes publics (DORA…)
-make ingest        # indexe textes et politiques dans Chroma
-make test
+bash scripts/j5_passages.sh google_genai gemini-3.8-flash m8   # rejoue une menace
+PYTHONPATH=src python scripts/analyser_j5.py                   # verdicts par menace
+PYTHONPATH=src python scripts/verifier_audit.py                # intégrité du journal d'audit
 ```
 
-## Utiliser l'agent (J3)
+---
 
-```bash
-make demo-uc1                                   # RCSA sur un nouveau processus
-make demo-uc2                                   # cartographie DORA art. 30
-make ask Q="Quels KRI sont hors appétit ?" U=u.weber
-make reset-db                                   # annule les écritures de l'agent
+## Structure du dépôt
+
+```
+src/grc_agent/   agent.py · tools.py (14 outils + couche d'autorité) · db.py (accès + journal chaîné) · ingest.py
+web/             app.py (API FastAPI) · index.html (console de chat + registre)
+db/              01_schema.sql (dont audit_log append-only + pending_actions) · 02_seed.sql (fictif)
+corpus/          textes réglementaires à indexer (DORA, AI Act, CSSF, LBC/FT)
+data/policies/   politiques internes fictives de la BEL
+scenarios/       scénarios d'usage (uc1, uc2) et d'attaque (m1…m8)
+scripts/         campagne de mesure, analyse des traces, vérification du journal
+docs/            cadrage, rapport avant/après, schémas
 ```
 
-### Choisir le modèle
+## Feuille de route
 
-Le LLM de l'agent se choisit dans `.env` (`LLM_PROVIDER`, `LLM_MODEL`) ou à la volée :
-
-```bash
-make ask Q="..."                                                      # modèle du .env (Ollama par défaut)
-PYTHONPATH=src python -m grc_agent.cli --scenario uc2 --provider ollama --model llama3.1:8b
-PYTHONPATH=src python -m grc_agent.cli --scenario uc2 --provider anthropic --model claude-sonnet-5
-```
-
-| Fournisseur | `LLM_PROVIDER` | Prérequis |
-|---|---|---|
-| Ollama (local, défaut : `qwen2.5:7b`) | `ollama` | aucun ; les données ne quittent pas la machine |
-| Anthropic (Claude) | `anthropic` | `pip install -r requirements-cloud.txt`, `ANTHROPIC_API_KEY` |
-| OpenAI (GPT) | `openai` | idem, `OPENAI_API_KEY` |
-| Google (Gemini) | `google_genai` | idem, `GOOGLE_API_KEY` |
-
-Le modèle local doit savoir **appeler des outils au format natif**. `mistral:7b` a échoué en J3 : il écrit les appels en JSON dans sa réponse et invente les résultats (0 outil réellement exécuté). L'agent détecte ce cas et affiche une alerte (`appels_simules` dans la trace).
-
-Les embeddings restent toujours locaux (Ollama). Les fournisseurs cloud sont réservés aux **données fictives** du lab : en production, une API cloud serait un prestataire tiers de services TIC au sens de DORA (art. 28 à 30). Chaque trace enregistre le fournisseur et le modèle, ce qui permet de comparer leur résistance aux mêmes attaques.
-
-Chaque exécution est tracée dans `traces/AAAAMMJJ.jsonl` (question, outils appelés, écritures, réponse, durée).
-
-> **Version de référence volontairement non protégée** : en J3, l'agent écrit directement dans le registre, ignore le rôle de l'utilisateur et peut clôturer un incident. C'est la base de mesure des tests offensifs de J4-J5 ; la couche d'autorité arrive en semaine 2.
-
-La base est accessible sur `localhost:5432` (identifiants dans `.env`). Exemple :
-
-```sql
--- risques dont le risque résiduel dépasse l'appétit
-SELECT * FROM v_risks_over_appetite;
-```
-
-## Feuille de route (3 semaines)
-
-| Jour | Objectif | Statut |
-|---|---|---|
-| J1 | Cadrage, architecture, modèle de menace | fait |
-| J2 | Environnement, base GRC, données fictives, corpus indexé | fait |
-| J3 | Premier agent LangGraph (UC1, UC2), sans protection | fait |
-| J4-J5 | Tests offensifs de référence (menaces M1 à M8) | à faire |
-| S2 | Couche d'autorité OPA, garde-fous, journalisation, re-tests | à faire |
-| S3 | Dossier de gouvernance (AI Act, DORA, ISO/IEC 42001), rapport, démo | à faire |
+| Étape | Statut |
+|---|---|
+| Base GRC, corpus indexé, agent LangGraph (UC1, UC2) | ✅ fait |
+| Mesure des 8 menaces (OWASP LLM) sur la version non protégée | ✅ fait |
+| Durcissement **M8** (journal d'audit chaîné et inviolable) | ✅ fait |
+| Durcissement **M1** (couche d'autorité : N3 bloqué, N2 par rôle) | ✅ fait |
+| Interface web (chat + registre de gouvernance) | ✅ fait |
+| Validation nominative « quatre yeux » (`pending_actions`) | 🔜 étape suivante |
+| Défense en profondeur (validation Pydantic, filtrage RAG par rôle) | 🔜 |
+| Déploiement cloud (Cloud Run + Postgres managé + embeddings Vertex) | 🔜 |
 
 ## Avertissements
 
-- `data/policies/politique_gestion_incidents.md` contient **volontairement** une injection de prompt indirecte, utilisée pour les tests de la menace M2. Voir [`tests/README.md`](tests/README.md).
-- Les supports de formation utilisés pour le cadrage ne sont pas versionnés (droits d'auteur).
+- Données **fictives** ; aucune donnée bancaire réelle.
+- `data/policies/politique_gestion_incidents.md` contient **volontairement** une injection de prompt indirecte, utilisée pour tester la menace M2.
